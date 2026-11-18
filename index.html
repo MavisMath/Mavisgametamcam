@@ -663,6 +663,48 @@
     </main>
 
     <!-- =========================================================
+         KHUNG BÌNH LUẬN & GÓP Ý GISCUS DÂN GIAN
+    ========================================================= -->
+    <section id="giscus-comment-section" class="folk-card" style="margin-top: 16px; width: 100%; max-width: 520px;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; border-bottom: 2px dashed #B45309; padding-bottom: 10px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <span style="font-size: 24px;">💬</span>
+                <div>
+                    <h2 style="font-size: 15px; font-weight: 900; color: #991B1B; text-transform: uppercase; letter-spacing: 0.3px;">
+                        Góc Cà Khịa & Góp Ý Cho Tấm Cám
+                    </h2>
+                    <p style="font-size: 11px; font-weight: 700; color: #78350F; margin-top: 1px;">
+                        Thả cảm xúc, tag bạn thân hoặc góp ý tính năng cho Ông Bụt nhé!
+                    </p>
+                </div>
+            </div>
+            <span style="font-size: 10.5px; font-weight: 900; background: #DCFCE7; color: #166534; padding: 3px 8px; border-radius: 999px; border: 1px solid #16A34A; white-space: nowrap;">
+                Thảo Luận 🌾
+            </span>
+        </div>
+
+        <!-- Khung nhúng Giscus -->
+        <div class="giscus-wrap" style="min-height: 160px; padding: 4px 0;">
+            <script src="https://giscus.app/client.js"
+                data-repo="MavisMath/Mavisgametamcam"
+                data-repo-id="R_kgDONYZAAA"
+                data-category="General"
+                data-category-id="DIC_kwDONYZAAA"
+                data-mapping="pathname"
+                data-strict="0"
+                data-reactions-enabled="1"
+                data-emit-metadata="0"
+                data-input-position="bottom"
+                data-theme="light"
+                data-lang="vi"
+                crossorigin="anonymous"
+                async>
+            </script>
+            <div class="giscus"></div>
+        </div>
+    </section>
+
+    <!-- =========================================================
          MÃ NGUỒN LOGIC JAVASCRIPT (VANILLA JS HOÀN CHỈNH)
     ========================================================= -->
     <script>
@@ -1345,6 +1387,9 @@
             document.getElementById('screen-end').classList.add('hidden');
             document.getElementById('screen-game').classList.remove('hidden');
 
+            const giscusEl = document.getElementById('giscus-comment-section');
+            if (giscusEl) giscusEl.classList.add('hidden'); // Ẩn khi đang chơi tập trung
+
             // Bật nhạc nền
             startBGM();
 
@@ -1733,6 +1778,9 @@
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-end').classList.remove('hidden');
 
+            const giscusEl = document.getElementById('giscus-comment-section');
+            if (giscusEl) giscusEl.classList.remove('hidden'); // Hiện lại ở màn hình kết quả
+
             // Render cắt cảnh & Sắc Phong
             renderCutscene(isVictory);
             drawRoyalCertificateCanvas(isVictory);
@@ -2003,6 +2051,9 @@
             document.getElementById('screen-end').classList.add('hidden');
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-start').classList.remove('hidden');
+
+            const giscusEl = document.getElementById('giscus-comment-section');
+            if (giscusEl) giscusEl.classList.remove('hidden'); // Hiện lại ở sảnh chờ
 
             fetchOnlinePlayCount(); // Cập nhật lại số lượt chơi mới nhất khi về sảnh
         }
