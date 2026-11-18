@@ -347,6 +347,126 @@
         .hidden {
             display: none !important;
         }
+
+        /* =========================================================
+           CHẾ ĐỘ BAN ĐÊM (DARK MODE DÂN GIAN - ĐÊM TRĂNG DỊU MẮT)
+        ========================================================= */
+        body.dark-mode {
+            background-color: #0B111E !important;
+            background-image: 
+                radial-gradient(circle at 15% 15%, rgba(254, 240, 138, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 85% 85%, rgba(16, 185, 129, 0.08) 0%, transparent 45%),
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.9) 0%, transparent 60%) !important;
+            color: #FEF3C7 !important;
+        }
+
+        body.dark-mode .folk-card {
+            background: linear-gradient(160deg, #1C1917 0%, #171412 60%, #0F0B09 100%) !important;
+            border-color: #B45309 !important;
+            box-shadow: 0 10px 0 #000000, 0 16px 30px rgba(0, 0, 0, 0.7) !important;
+            color: #FEF3C7 !important;
+        }
+
+        body.dark-mode h1 {
+            color: #FDE047 !important;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8) !important;
+        }
+
+        body.dark-mode h2,
+        body.dark-mode h3 {
+            color: #FBBF24 !important;
+        }
+
+        /* Khung lời Bụt dặn */
+        body.dark-mode #screen-start > div:nth-of-type(2) {
+            background: rgba(41, 37, 36, 0.95) !important;
+            border-color: #B45309 !important;
+            color: #FEF3C7 !important;
+        }
+        body.dark-mode #screen-start > div:nth-of-type(2) strong {
+            color: #F87171 !important;
+        }
+
+        /* Khung Phân vai Cám */
+        body.dark-mode #screen-start > div:nth-of-type(3) {
+            background: #1C1917 !important;
+            border-color: #B45309 !important;
+        }
+
+        /* Khung chọn ảnh Cám */
+        body.dark-mode #screen-start > div:nth-of-type(3) > div:nth-of-type(2) {
+            background: #292524 !important;
+            border-color: #78350F !important;
+        }
+
+        body.dark-mode input,
+        body.dark-mode textarea {
+            background: #292524 !important;
+            color: #FEF9C3 !important;
+            border-color: #B45309 !important;
+        }
+        body.dark-mode input::placeholder,
+        body.dark-mode textarea::placeholder {
+            color: #A8A29E !important;
+        }
+
+        /* Badge lượt chơi */
+        body.dark-mode #play-counter-badge {
+            background: rgba(41, 37, 36, 0.9) !important;
+            border-color: #B45309 !important;
+            color: #FBBF24 !important;
+        }
+
+        /* HUD gameplay */
+        body.dark-mode #hud-basket-box,
+        body.dark-mode #hud-timer-box {
+            background: #241D17 !important;
+            border-color: #B45309 !important;
+            box-shadow: 0 3px 0 #000 !important;
+        }
+        body.dark-mode #hud-tam-label,
+        body.dark-mode #hud-timer-box div div:first-child {
+            color: #FBBF24 !important;
+        }
+        body.dark-mode #cam-taunt-box {
+            background: #3B1212 !important;
+            border-color: #DC2626 !important;
+        }
+        body.dark-mode #cam-taunt-msg {
+            color: #FCA5A5 !important;
+        }
+
+        /* Đầm lầy ban đêm */
+        body.dark-mode .swamp-pond {
+            background: linear-gradient(180deg, #091D1A 0%, #062320 35%, #051A18 70%, #020C0B 100%) !important;
+            border-color: #78350F !important;
+            box-shadow: inset 0 8px 30px rgba(0,0,0,0.9), 0 8px 0 #000 !important;
+        }
+        body.dark-mode .mud-hole {
+            background: radial-gradient(ellipse at center, #1C120C 0%, #0F0906 70%, #000000 100%) !important;
+            border-color: rgba(245, 158, 11, 0.2) !important;
+        }
+
+        /* Cắt cảnh kết quả */
+        body.dark-mode #end-cutscene-box {
+            background: #241D17 !important;
+            border-color: #B45309 !important;
+        }
+        body.dark-mode #end-story-text {
+            background: #1C1917 !important;
+            border-color: #78350F !important;
+            color: #FEF3C7 !important;
+        }
+
+        /* Khung góp ý Google Sheets */
+        body.dark-mode #feedback-form-box {
+            background: #1C1917 !important;
+            border-color: #B45309 !important;
+        }
+        body.dark-mode #screen-end > div:last-child {
+            background: rgba(41, 37, 36, 0.95) !important;
+            border-color: #B45309 !important;
+        }
     </style>
 </head>
 <body>
@@ -375,6 +495,9 @@
                     <span id="top-play-counter" style="font-size: 11px; font-weight: 900; background: #FEF08A; color: #991B1B; padding: 4px 10px; border-radius: 999px; border: 1.5px solid #B45309; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                         🔥 <span id="top-play-val">...</span> lượt mò
                     </span>
+                    <button type="button" id="btn-toggle-theme" onclick="toggleTheme()" class="folk-btn folk-btn-gold folk-btn-sm" title="Chuyển chế độ Ban Ngày / Ban Đêm">
+                        🌙 Đêm
+                    </button>
                     <button type="button" id="btn-toggle-sound" onclick="toggleAudio()" class="folk-btn folk-btn-gold folk-btn-sm">
                         🔊 Âm thanh: BẬT
                     </button>
@@ -512,9 +635,14 @@
                             </div>
                         </div>
                     </div>
-                    <button type="button" onclick="toggleAudio()" id="btn-sound-mini" style="background: #FDE047; border: 1.5px solid #78350F; border-radius: 50%; width: 30px; height: 30px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
-                        🔊
-                    </button>
+                    <div style="display: flex; align-items: center; gap: 4px;">
+                        <button type="button" onclick="toggleTheme()" id="btn-theme-mini" style="background: #FDE047; border: 1.5px solid #78350F; border-radius: 50%; width: 30px; height: 30px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;" title="Chuyển chế độ Ban Ngày / Ban Đêm">
+                            🌙
+                        </button>
+                        <button type="button" onclick="toggleAudio()" id="btn-sound-mini" style="background: #FDE047; border: 1.5px solid #78350F; border-radius: 50%; width: 30px; height: 30px; font-size: 13px; cursor: pointer; display: flex; align-items: center; justify-content: center;">
+                            🔊
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -799,6 +927,34 @@
                 startBGM();
             }
             showToast(state.audioEnabled ? "Đã bật âm thanh 🔊" : "Đã tắt âm thanh 🔇");
+        }
+
+        /* =========================================================
+           CHẾ ĐỘ BAN NGÀY / BAN ĐÊM (THEME TOGGLE)
+        ========================================================= */
+        let isDarkMode = localStorage.getItem('tamcam_dark_mode') === 'true';
+
+        function applyTheme(isDark) {
+            isDarkMode = isDark;
+            localStorage.setItem('tamcam_dark_mode', isDark ? 'true' : 'false');
+
+            const btnTheme = document.getElementById('btn-toggle-theme');
+            const btnMini = document.getElementById('btn-theme-mini');
+
+            if (isDark) {
+                document.body.classList.add('dark-mode');
+                if (btnTheme) btnTheme.textContent = '☀️ Ngày';
+                if (btnMini) btnMini.textContent = '☀️';
+            } else {
+                document.body.classList.remove('dark-mode');
+                if (btnTheme) btnTheme.textContent = '🌙 Đêm';
+                if (btnMini) btnMini.textContent = '🌙';
+            }
+        }
+
+        function toggleTheme() {
+            applyTheme(!isDarkMode);
+            showToast(isDarkMode ? "Đã chuyển sang chế độ Đêm trăng dịu mắt! 🌙✨" : "Đã chuyển về chế độ Ban ngày tươi sáng! ☀️🌾");
         }
 
         // Phát hiệu ứng âm thanh (SFX)
@@ -2386,6 +2542,7 @@
 
         // Khởi động khi tải xong trang
         window.addEventListener('DOMContentLoaded', () => {
+            applyTheme(isDarkMode);  // Áp dụng chế độ Ngày / Đêm đã lưu
             getOrCreateDeviceId();   // Khởi tạo Device ID nếu chưa có
             generateDefaultCamAvatar();
             buildHoles();
