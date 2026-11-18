@@ -464,6 +464,12 @@
             <button type="button" id="btn-start-game" onclick="startGame()" class="folk-btn folk-btn-primary pulse-btn" style="width: 100%; padding: 15px; font-size: 18px; border-radius: 20px;">
                 🧺 BẮT ĐẦU MÒ CUA (60 GIÂY)
             </button>
+
+            <!-- Bộ đếm lượt chơi trực tuyến (CounterAPI) -->
+            <div id="play-counter-badge" style="text-align: center; margin-top: 12px; font-size: 12.5px; font-weight: 800; color: #B45309; display: flex; align-items: center; justify-content: center; gap: 6px; background: rgba(254, 243, 199, 0.9); padding: 7px 16px; border-radius: 999px; border: 1.5px dashed #D97706; box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);">
+                <span style="font-size: 14px;">🔥</span>
+                <span>Đã có <b id="play-count-val" style="color: #DC2626; font-size: 14px; font-weight: 900;">...</b> lượt mò cua!</span>
+            </div>
         </section>
 
         <!-- =========================================================
@@ -1292,6 +1298,7 @@
         ========================================================= */
         function startGame() {
             getAudioContext();
+            recordOnlinePlayUp(); // Tăng bộ đếm lượt chơi trực tuyến khi bắt đầu
 
             // Lấy tên người chơi
             const tamInput = document.getElementById('input-tam-name').value.trim();
@@ -1989,6 +1996,8 @@
             document.getElementById('screen-end').classList.add('hidden');
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-start').classList.remove('hidden');
+
+            fetchOnlinePlayCount(); // Cập nhật lại số lượt chơi mới nhất khi về sảnh
         }
 
         function showToast(text) {
@@ -2001,10 +2010,76 @@
             }, 2600);
         }
 
+        /* =========================================================
+           12. BỘ ĐẾM LƯỢT CHƠI TRỰC TUYẾN (COUNTERAPI.DEV)
+        ========================================================= */
+        const PLAY_COUNTER_API = {
+            GET: 'https://api.counterapi.dev/v1/tamcam-game/plays',
+            UP: 'https://api.counterapi.dev/v1/tamcam-game/plays/up'
+        };
+
+        function updatePlayCountUI(count) {
+            const countEl = document.getElementById('play-count-val');
+            if (countEl) {
+                const num = parseInt(count, 10);
+                countEl.textContent = isNaN(num) ? count : num.toLocaleString('vi-VN');
+            }
+        }
+
+        async function fetchOnlinePlayCount() {
+            try {
+                const res = await fetch(PLAY_COUNTER_API.GET, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-cache'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const count = data.count ?? data.value ?? data.result;
+                    if (count !== undefined && count !== null) {
+                        updatePlayCountUI(count);
+                        localStorage.setItem('tamcam_plays_cached', count);
+                        return;
+                    }
+                }
+                throw new Error('API unready');
+            } catch (err) {
+                // Try/catch bảo vệ: nếu mất mạng hoặc API gặp sự cố, game vẫn chạy bình thường không bị treo
+                const cached = parseInt(localStorage.getItem('tamcam_plays_cached') || '168', 10);
+                updatePlayCountUI(cached);
+            }
+        }
+
+        async function recordOnlinePlayUp() {
+            // Tăng số hiển thị và lưu local ngay lập tức để người chơi thấy phản hồi
+            let current = parseInt(localStorage.getItem('tamcam_plays_cached') || '168', 10) + 1;
+            localStorage.setItem('tamcam_plays_cached', current);
+            updatePlayCountUI(current);
+
+            try {
+                const res = await fetch(PLAY_COUNTER_API.UP, {
+                    method: 'GET',
+                    headers: { 'Accept': 'application/json' },
+                    cache: 'no-cache'
+                });
+                if (res.ok) {
+                    const data = await res.json();
+                    const count = data.count ?? data.value ?? data.result;
+                    if (count !== undefined && count !== null) {
+                        updatePlayCountUI(count);
+                        localStorage.setItem('tamcam_plays_cached', count);
+                    }
+                }
+            } catch (err) {
+                // Try/catch bảo vệ: nếu API lỗi hoặc không kết nối được thì game vẫn chạy mượt mà
+            }
+        }
+
         // Khởi động khi tải xong trang
         window.addEventListener('DOMContentLoaded', () => {
             generateDefaultCamAvatar();
             buildHoles();
+            fetchOnlinePlayCount(); // Lấy tổng số lượt chơi khi mở sảnh chờ
         });
     </script>
 </body>
