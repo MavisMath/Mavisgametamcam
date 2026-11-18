@@ -410,11 +410,16 @@
             color: #A8A29E !important;
         }
 
-        /* Badge lượt chơi */
+        /* Badge lượt chơi & lượt tim */
         body.dark-mode #play-counter-badge {
             background: rgba(41, 37, 36, 0.9) !important;
             border-color: #B45309 !important;
             color: #FBBF24 !important;
+        }
+        body.dark-mode #top-likes-counter {
+            background: #450A0A !important;
+            border-color: #EF4444 !important;
+            color: #FCA5A5 !important;
         }
 
         /* HUD gameplay */
@@ -491,9 +496,9 @@
                 </span>
                 
                 <div style="display: flex; align-items: center; gap: 6px;">
-                    <!-- Badge số lượt chơi góc trên -->
-                    <span id="top-play-counter" style="font-size: 11px; font-weight: 900; background: #FEF08A; color: #991B1B; padding: 4px 10px; border-radius: 999px; border: 1.5px solid #B45309; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-                        🔥 <span id="top-play-val">...</span> lượt mò
+                    <!-- Badge số lượt tim góc trên -->
+                    <span id="top-likes-counter" style="font-size: 11px; font-weight: 900; background: #FEE2E2; color: #DC2626; padding: 4px 10px; border-radius: 999px; border: 1.5px solid #EF4444; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        ❤️ <span id="top-likes-val">...</span> lượt tym
                     </span>
                     <button type="button" id="btn-toggle-theme" onclick="toggleTheme()" class="folk-btn folk-btn-gold folk-btn-sm" title="Chuyển chế độ Ban Ngày / Ban Đêm">
                         🌙 Đêm
@@ -2260,12 +2265,10 @@
 
         function updatePlayCountUI(count) {
             const countEl = document.getElementById('play-count-val');
-            const topEl = document.getElementById('top-play-val');
             const num = parseInt(count, 10);
             const formatted = isNaN(num) ? count : num.toLocaleString('vi-VN');
 
             if (countEl) countEl.textContent = formatted;
-            if (topEl) topEl.textContent = formatted;
         }
 
         async function fetchOnlinePlayCount() {
@@ -2329,10 +2332,12 @@
 
         function updateLikesCounterUI(count) {
             const likesEl = document.getElementById('likes-count-val');
-            if (likesEl) {
-                const num = parseInt(count, 10);
-                likesEl.textContent = isNaN(num) ? count : num.toLocaleString('vi-VN');
-            }
+            const topLikesEl = document.getElementById('top-likes-val');
+            const num = parseInt(count, 10);
+            const formatted = isNaN(num) ? count : num.toLocaleString('vi-VN');
+
+            if (likesEl) likesEl.textContent = formatted;
+            if (topLikesEl) topLikesEl.textContent = formatted;
         }
 
         async function fetchLikesCount() {
