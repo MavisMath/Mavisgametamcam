@@ -642,7 +642,7 @@
             </div>
 
             <!-- Các nút hành động cuối trận -->
-            <div style="display: flex; flex-direction: column; gap: 8px;">
+            <div style="display: flex; flex-direction: column; gap: 8px; margin-bottom: 14px;">
                 <!-- Tải ảnh Sắc Phong PNG -->
                 <button type="button" onclick="downloadCertificate()" class="folk-btn folk-btn-green" style="width: 100%; padding: 12px; font-size: 14.5px;">
                     📥 TẢI ẢNH CHỨNG NHẬN (PNG)
@@ -658,70 +658,60 @@
                     🔄 CHƠI LẠI VÁN MỚI
                 </button>
             </div>
+
+            <!-- =========================================================
+                 KHU VỰC THẢ TIM & GÓP Ý TÍCH HỢP NGAY TRONG MÀN HÌNH KẾT QUẢ
+            ========================================================= -->
+            <div style="background: rgba(254, 243, 199, 0.95); border: 2px dashed #B45309; border-radius: 18px; padding: 12px 14px; text-align: center;">
+                <!-- Dòng Thả tim yêu thích -->
+                <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 1px dashed rgba(180, 83, 9, 0.4);">
+                    <div style="font-size: 12px; font-weight: 800; color: #451A03; display: flex; align-items: center; gap: 4px;">
+                        <span>❤️</span>
+                        <span>Đã có <b id="likes-count-val" style="color: #DC2626; font-size: 14px; font-weight: 900;">...</b> người thích!</span>
+                    </div>
+                    <button type="button" id="btn-like-game" onclick="handleLikeGame()" class="folk-btn folk-btn-primary" style="padding: 6px 14px; font-size: 11.5px; border-radius: 999px;">
+                        Thả Tim Ngay ❤️
+                    </button>
+                </div>
+
+                <!-- Nút bấm mở/thu gọn khung góp ý -->
+                <button type="button" id="btn-toggle-feedback" onclick="toggleFeedbackForm()" class="folk-btn folk-btn-gold" style="width: 100%; padding: 8px 12px; font-size: 12px; border-radius: 12px; box-shadow: 0 3px 0 #92400E;">
+                    💬 Gửi Lời Nhắn / Góp Ý Cho Tác Giả (Nhấn để mở) ▼
+                </button>
+
+                <!-- Khung góp ý Google Sheets (MẶC ĐỊNH ẨN, KHI BẤM NÚT TRÊN MỚI HIỆN RA) -->
+                <div id="feedback-form-box" style="display: none; margin-top: 10px; text-align: left; background: #FFFFFF; border: 1.5px solid #78350F; border-radius: 14px; padding: 12px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);">
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        <div>
+                            <label for="feedback-name" style="display: block; font-size: 10.5px; font-weight: 800; color: #78350F; margin-bottom: 2px;">
+                                Tên của bạn (không bắt buộc):
+                            </label>
+                            <input type="text" id="feedback-name" maxlength="30" placeholder="Tên của bạn (ví dụ: Cô Tấm, Bụt, Bạn thân...)"
+                                style="width: 100%; padding: 6px 10px; font-size: 12px; font-weight: 700; border: 1.5px solid #B45309; border-radius: 10px; background: #FEF9C3; color: #451A03; outline: none;">
+                        </div>
+
+                        <div>
+                            <label for="feedback-msg" style="display: block; font-size: 10.5px; font-weight: 800; color: #78350F; margin-bottom: 2px;">
+                                Nội dung góp ý / cà khịa: <span style="color: #DC2626;">*</span>
+                            </label>
+                            <textarea id="feedback-msg" rows="3" maxlength="500" placeholder="Viết cảm nghĩ, cà khịa bạn thân hoặc góp ý tính năng..."
+                                style="width: 100%; padding: 6px 10px; font-size: 12px; font-weight: 600; border: 1.5px solid #B45309; border-radius: 10px; background: #FFFDF0; color: #451A03; outline: none; resize: vertical; line-height: 1.4;"></textarea>
+                        </div>
+
+                        <button type="button" id="btn-send-feedback" onclick="sendFeedbackToSheet()" class="folk-btn folk-btn-green" style="padding: 8px 14px; font-size: 12.5px; border-radius: 10px; width: 100%;">
+                            Gửi Lời Nhắn 🚀
+                        </button>
+
+                        <!-- Thông báo trạng thái gửi -->
+                        <div id="feedback-status-msg" style="display: none; text-align: center; font-size: 11.5px; font-weight: 800; color: #15803D; background: #DCFCE7; border: 1.5px solid #16A34A; padding: 6px 10px; border-radius: 8px;">
+                            ✅ Đã gửi lời nhắn trực tiếp tới tác giả!
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
     </main>
-
-    <!-- =========================================================
-         KHU VỰC THẢ TIM & GÓP Ý TRỰC TIẾP (GOOGLE SHEETS)
-    ========================================================= -->
-    <section id="community-interactive-section" class="folk-card" style="margin-top: 16px; width: 100%; max-width: 520px;">
-        
-        <!-- 1. KHU VỰC THẢ TIM YÊU THÍCH (REALTIME COUNTER) -->
-        <div style="background: rgba(254, 243, 199, 0.95); border: 2px solid #B45309; border-radius: 18px; padding: 12px 14px; text-align: center; margin-bottom: 14px; box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);">
-            <div style="font-size: 13.5px; font-weight: 800; color: #451A03; margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap;">
-                <span>❤️</span>
-                <span>Đã có <b id="likes-count-val" style="color: #DC2626; font-size: 16px; font-weight: 900;">...</b> người yêu thích trò chơi này!</span>
-            </div>
-            
-            <button type="button" id="btn-like-game" onclick="handleLikeGame()" class="folk-btn folk-btn-primary" style="padding: 9px 22px; font-size: 13px; border-radius: 999px; width: auto; max-width: 100%; box-shadow: 0 4px 0 #701A1A;">
-                Thả Tim Ngay ❤️
-            </button>
-        </div>
-
-        <!-- 2. KHUNG GỬI BÌNH LUẬN / GÓP Ý TRỰC TIẾP (GOOGLE APPS SCRIPT -> GOOGLE SHEETS) -->
-        <div style="background: #FFFFFF; border: 2px solid #78350F; border-radius: 18px; padding: 14px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);">
-            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; border-bottom: 1.5px dashed #B45309; padding-bottom: 8px;">
-                <div style="display: flex; align-items: center; gap: 6px;">
-                    <span style="font-size: 20px;">💬</span>
-                    <h3 style="font-size: 13.5px; font-weight: 900; color: #991B1B; text-transform: uppercase; letter-spacing: 0.3px;">
-                        Gửi Lời Nhắn / Góp Ý Cho Tác Giả
-                    </h3>
-                </div>
-                <span style="font-size: 10px; font-weight: 900; background: #DCFCE7; color: #166534; padding: 2px 8px; border-radius: 999px; border: 1px solid #16A34A;">
-                    Realtime 📊
-                </span>
-            </div>
-
-            <!-- Form gửi lời nhắn -->
-            <div style="display: flex; flex-direction: column; gap: 9px;">
-                <div>
-                    <label for="feedback-name" style="display: block; font-size: 11px; font-weight: 800; color: #78350F; margin-bottom: 3px;">
-                        Tên của bạn (không bắt buộc):
-                    </label>
-                    <input type="text" id="feedback-name" maxlength="30" placeholder="Tên của bạn (ví dụ: Cô Tấm, Bụt, Bạn thân...)"
-                        style="width: 100%; padding: 8px 12px; font-size: 12.5px; font-weight: 700; border: 1.5px solid #B45309; border-radius: 12px; background: #FEF9C3; color: #451A03; outline: none;">
-                </div>
-
-                <div>
-                    <label for="feedback-msg" style="display: block; font-size: 11px; font-weight: 800; color: #78350F; margin-bottom: 3px;">
-                        Nội dung góp ý / cà khịa: <span style="color: #DC2626;">*</span>
-                    </label>
-                    <textarea id="feedback-msg" rows="3" maxlength="500" placeholder="Nội dung góp ý / cà khịa..."
-                        style="width: 100%; padding: 8px 12px; font-size: 12.5px; font-weight: 600; border: 1.5px solid #B45309; border-radius: 12px; background: #FFFDF0; color: #451A03; outline: none; resize: vertical; line-height: 1.4;"></textarea>
-                </div>
-
-                <button type="button" id="btn-send-feedback" onclick="sendFeedbackToSheet()" class="folk-btn folk-btn-green" style="padding: 10px 18px; font-size: 13.5px; border-radius: 12px; width: 100%; box-shadow: 0 4px 0 #14532D;">
-                    Gửi Lời Nhắn 🚀
-                </button>
-
-                <!-- Thông báo trạng thái gửi -->
-                <div id="feedback-status-msg" style="display: none; text-align: center; font-size: 12px; font-weight: 800; color: #15803D; background: #DCFCE7; border: 1.5px solid #16A34A; padding: 7px 12px; border-radius: 10px; margin-top: 2px;">
-                    ✅ Đã gửi lời nhắn trực tiếp tới tác giả!
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- =========================================================
          MÃ NGUỒN LOGIC JAVASCRIPT (VANILLA JS HOÀN CHỈNH)
@@ -1406,9 +1396,6 @@
             document.getElementById('screen-end').classList.add('hidden');
             document.getElementById('screen-game').classList.remove('hidden');
 
-            const communityEl = document.getElementById('community-interactive-section');
-            if (communityEl) communityEl.classList.add('hidden'); // Ẩn khi đang chơi tập trung
-
             // Bật nhạc nền
             startBGM();
 
@@ -1797,9 +1784,6 @@
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-end').classList.remove('hidden');
 
-            const communityEl = document.getElementById('community-interactive-section');
-            if (communityEl) communityEl.classList.remove('hidden'); // Hiện lại ở màn hình kết quả
-
             // Render cắt cảnh & Sắc Phong
             renderCutscene(isVictory);
             drawRoyalCertificateCanvas(isVictory);
@@ -2071,10 +2055,29 @@
             document.getElementById('screen-game').classList.add('hidden');
             document.getElementById('screen-start').classList.remove('hidden');
 
-            const communityEl = document.getElementById('community-interactive-section');
-            if (communityEl) communityEl.classList.remove('hidden'); // Hiện lại ở sảnh chờ
+            // Đóng khung góp ý nếu đang mở
+            const feedbackBox = document.getElementById('feedback-form-box');
+            const toggleBtn = document.getElementById('btn-toggle-feedback');
+            if (feedbackBox) feedbackBox.style.display = 'none';
+            if (toggleBtn) toggleBtn.textContent = '💬 Gửi Lời Nhắn / Góp Ý Cho Tác Giả (Nhấn để mở) ▼';
 
             fetchOnlinePlayCount(); // Cập nhật lại số lượt chơi mới nhất khi về sảnh
+        }
+
+        function toggleFeedbackForm() {
+            const formBox = document.getElementById('feedback-form-box');
+            const toggleBtn = document.getElementById('btn-toggle-feedback');
+            if (!formBox) return;
+
+            if (formBox.style.display === 'none' || formBox.style.display === '') {
+                formBox.style.display = 'block';
+                if (toggleBtn) toggleBtn.textContent = '▲ Thu Gọn Khung Góp Ý';
+                const msgInput = document.getElementById('feedback-msg');
+                if (msgInput) msgInput.focus();
+            } else {
+                formBox.style.display = 'none';
+                if (toggleBtn) toggleBtn.textContent = '💬 Gửi Lời Nhắn / Góp Ý Cho Tác Giả (Nhấn để mở) ▼';
+            }
         }
 
         function showToast(text) {
