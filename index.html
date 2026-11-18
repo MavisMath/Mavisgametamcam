@@ -365,13 +365,20 @@
         ========================================================= -->
         <section id="screen-start">
             <!-- Header bar -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                <span style="font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: #991B1B; color: #FEF08A; padding: 4px 12px; border-radius: 999px; border: 1px solid #FDE047;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; gap: 6px; flex-wrap: wrap;">
+                <span style="font-size: 11px; font-weight: 900; letter-spacing: 1px; text-transform: uppercase; background: #991B1B; color: #FEF08A; padding: 4px 10px; border-radius: 999px; border: 1px solid #FDE047;">
                     🌾 Dân Gian Đại Việt
                 </span>
-                <button type="button" id="btn-toggle-sound" onclick="toggleAudio()" class="folk-btn folk-btn-gold folk-btn-sm">
-                    🔊 Âm thanh: BẬT
-                </button>
+                
+                <div style="display: flex; align-items: center; gap: 6px;">
+                    <!-- Badge số lượt chơi góc trên -->
+                    <span id="top-play-counter" style="font-size: 11px; font-weight: 900; background: #FEF08A; color: #991B1B; padding: 4px 10px; border-radius: 999px; border: 1.5px solid #B45309; display: flex; align-items: center; gap: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                        🔥 <span id="top-play-val">...</span> lượt mò
+                    </span>
+                    <button type="button" id="btn-toggle-sound" onclick="toggleAudio()" class="folk-btn folk-btn-gold folk-btn-sm">
+                        🔊 Âm thanh: BẬT
+                    </button>
+                </div>
             </div>
 
             <!-- Tiêu đề Game -->
@@ -2020,10 +2027,12 @@
 
         function updatePlayCountUI(count) {
             const countEl = document.getElementById('play-count-val');
-            if (countEl) {
-                const num = parseInt(count, 10);
-                countEl.textContent = isNaN(num) ? count : num.toLocaleString('vi-VN');
-            }
+            const topEl = document.getElementById('top-play-val');
+            const num = parseInt(count, 10);
+            const formatted = isNaN(num) ? count : num.toLocaleString('vi-VN');
+
+            if (countEl) countEl.textContent = formatted;
+            if (topEl) topEl.textContent = formatted;
         }
 
         async function fetchOnlinePlayCount() {
