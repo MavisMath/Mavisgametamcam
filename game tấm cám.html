@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>TẤM CÁM: BẢO VỆ GIỎ ỐC - Cám Ơi, Trả Giỏ Cho Ta!</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,600;0,700;0,800;0,900;1,400&family=Playfair+Display:ital,wght@0,700;0,900;1,700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --folk-gold: #f59e0b;
+            --folk-red: #b91c1c;
+            --folk-brown: #451a03;
+            --lotus-green: #15803d;
+            --mud-dark: #3e2723;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #fef3c7;
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(251, 191, 36, 0.25) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(21, 128, 61, 0.2) 0%, transparent 50%);
+            user-select: none;
+            -webkit-user-select: none;
+            overflow-x: hidden;
+        }
+
+        .font-royal {
+            font-family: 'Playfair Display', serif;
+        }
+
+        /* Hiệu ứng tranh dân gian khung gỗ */
+        .folk-card {
+            background: linear-gradient(145deg, #fffbeb, #fef3c7);
+            border: 4px solid #78350f;
+            box-shadow: 0 10px 0 #451a03, 0 15px 25px rgba(0,0,0,0.25);
+        }
+
+        .folk-btn {
+            transition: all 0.1s ease;
+            box-shadow: 0 6px 0 #78350f, 0 8px 15px rgba(0,0,0,0.2);
+        }
+
+        .folk-btn:active {
+            transform: translateY(4px);
+            box-shadow: 0 2px 0 #78350f, 0 3px 8px rgba(0,0,0,0.2);
+        }
+
+        /* Đầm lầy & Khóm sen */
+        .swamp-pond {
+            background: linear-gradient(180deg, #134e4a 0%, #115e59 40%, #27272a 100%);
+            border: 5px solid #573016;
+            box-shadow: inset 0 8px 25px rgba(0,0,0,0.6), 0 8px 0 #3f220f;
+        }
+
+        .mud-hole {
+            background: radial-gradient(ellipse at center, #291d19 0%, #1c1311 75%, #0f0a09 100%);
+            box-shadow: inset 0 6px 12px rgba(0,0,0,0.85), 0 3px 0 rgba(255,255,255,0.12);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Gợn nước */
+        @keyframes ripple {
+            0% { transform: scale(0.85); opacity: 0.7; }
+            50% { transform: scale(1.05); opacity: 0.3; }
+            100% { transform: scale(0.85); opacity: 0.7; }
+        }
+        .water-ripple {
+            animation: ripple 3s infinite ease-in-out;
+        }
+
+        /* Đối tượng ngoi lên */
+        .entity-spawn {
+            transition: transform 0.18s cubic-bezier(0.34, 1.56, 0.64, 1);
+            transform: translateY(115%);
+        }
+        .entity-spawn.active {
+            transform: translateY(4%);
+        }
+
+        /* Chữ bay lên khi cộng/trừ điểm */
+        @keyframes floatUp {
+            0% { transform: translateY(0) scale(0.8); opacity: 1; }
+            100% { transform: translateY(-55px) scale(1.15); opacity: 0; }
+        }
+        .floating-text {
+            animation: floatUp 0.75s ease-out forwards;
+            pointer-events: none;
+        }
+
+        /* Rung giỏ / Rung màn hình */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-8px) rotate(-2deg); }
+            40%, 80% { transform: translateX(8px) rotate(2deg); }
+        }
+        .shake-anim {
+            animation: shake 0.35s ease-in-out;
+        }
+
+        /* Nhấp nháy cảnh báo đỏ */
+        @keyframes pulseDanger {
+            0%, 100% { transform: scale(1); color: #ef4444; }
+            50% { transform: scale(1.15); color: #b91c1c; }
+        }
+        .timer-danger {
+            animation: pulseDanger 0.5s infinite;
+        }
+
+        /* Bùn che mắt */
+        @keyframes splatIn {
+            0% { transform: scale(0) rotate(-20deg); opacity: 0; }
+            70% { transform: scale(1.1) rotate(5deg); opacity: 0.96; }
+            100% { transform: scale(1) rotate(0deg); opacity: 0.94; }
+        }
+        .mud-splat {
+            animation: splatIn 0.25s ease-out forwards;
+            cursor: pointer;
+        }
+
+        /* Khung Sắc Phong Cổ Truyền */
+        .sac-phong-frame {
+            background: linear-gradient(135deg, #fef08a 0%, #fde047 35%, #facc15 70%, #eab308 100%);
+            border: 6px double #991b1b;
+            box-shadow: inset 0 0 0 4px #fef08a, inset 0 0 0 8px #b91c1c, 0 12px 24px rgba(0,0,0,0.25);
+            position: relative;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col items-center justify-center p-2 sm:p-4 text-amber-950">
+
+    <!-- Thông báo Toast (Thay cho alert) -->
+    <div id="toast-box" class="fixed top-4 left-1/2 -translate-x-1/2 z-50 pointer-events-none transition-all duration-300 opacity-0 -translate-y-4">
+        <div class="bg-amber-900 text-amber-50 px-5 py-2.5 rounded-full shadow-xl border-2 border-amber-400 font-bold text-sm sm:text-base flex items-center gap-2">
+            <span>🔔</span>
+            <span id="toast-msg">Đã sao chép lời thách đấu!</span>
+        </div>
+    </div>
+
+    <!-- CONTAINER CHÍNH -->
+    <div class="w-full max-w-lg mx-auto relative">
+
+        <!-- ==========================================
+             1. MÀN HÌNH MỞ ĐẦU (START MENU)
+        =========================================== -->
+        <section id="screen-start" class="folk-card rounded-3xl p-4 sm:p-6 relative overflow-hidden">
+            <!-- Họa tiết mây góc -->
+            <div class="flex justify-between items-center mb-2">
+                <span class="text-xs font-extrabold tracking-widest uppercase bg-red-800 text-amber-100 px-3 py-1 rounded-full border border-amber-300 shadow">
+                    🌾 Cổ Tích Hệ Chiến
+                </span>
+                <button id="btn-mute" onclick="toggleAudio()" class="bg-amber-200 hover:bg-amber-300 text-amber-900 px-3 py-1 rounded-full text-xs font-bold border border-amber-700 transition">
+                    🔊 Âm thanh: BẬT
+                </button>
+            </div>
+
+            <!-- Tiêu đề Game -->
+            <div class="text-center my-2">
+                <h1 class="text-2xl sm:text-3xl font-black text-red-800 tracking-tight drop-shadow-sm uppercase leading-tight">
+                    TẤM CÁM: BẢO VỆ GIỎ ỐC
+                </h1>
+                <p class="text-sm sm:text-base font-extrabold text-amber-700 italic mt-0.5">
+                    "Cám Ơi, Trả Giỏ Cho Ta!"
+                </p>
+            </div>
+
+            <!-- Lời dẫn của Bụt -->
+            <div class="bg-amber-100/90 border-2 border-amber-700/60 rounded-2xl p-3 my-3 flex items-center gap-3 shadow-inner">
+                <div class="w-14 h-14 sm:w-16 sm:h-16 flex-shrink-0 bg-gradient-to-br from-amber-300 to-amber-500 rounded-2xl border-2 border-amber-800 flex items-center justify-center text-3xl sm:text-4xl shadow">
+                    🎅🏻
+                </div>
+                <div class="text-xs sm:text-sm leading-relaxed text-amber-950">
+                    <span class="font-extrabold text-red-800">Ông Bụt nhắn nhủ:</span>
+                    "Đường làng hiểm trở, lòng người khó đoán. Con hãy mò đủ <b class="text-red-700 underline">15 con cua vàng, ốc ngọc</b> và bảo vệ giỏ ốc nguyên vẹn trước khi hoàng hôn buông xuống (<b class="text-red-700">45 giây</b>)!"
+                </div>
+            </div>
+
+            <!-- Khu vực Cá nhân hóa Bạn Thân (Viral Feature) -->
+            <div class="bg-white/80 border-2 border-amber-800 rounded-2xl p-3.5 sm:p-4 mb-4 shadow-sm">
+                <div class="flex items-center gap-1.5 mb-2.5">
+                    <span class="text-lg">🎭</span>
+                    <h2 class="font-extrabold text-sm sm:text-base text-amber-950 uppercase tracking-wide">
+                        Phân Vai & Ghép Mặt "Con Cám"
+                    </h2>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mb-3">
+                    <div>
+                        <label class="block text-xs font-bold text-amber-900 mb-1">Tên của bạn (Vai Tấm):</label>
+                        <input id="input-tam-name" type="text" maxlength="18" value="Cô Tấm" placeholder="Nhập tên bạn..." 
+                            class="w-full px-3 py-2 rounded-xl border-2 border-amber-700 bg-amber-50/70 font-bold text-sm focus:outline-none focus:ring-2 focus:ring-red-600">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-red-800 mb-1">Tên đứa bạn thân (Vai Cám):</label>
+                        <input id="input-cam-name" type="text" maxlength="18" value="Con Cám" placeholder="Tên đứa hay cướp công..." 
+                            class="w-full px-3 py-2 rounded-xl border-2 border-red-700 bg-red-50/70 font-bold text-sm text-red-900 focus:outline-none focus:ring-2 focus:ring-red-600">
+                    </div>
+                </div>
+
+                <!-- Upload Ảnh Mặt Cám -->
+                <div class="flex items-center justify-between gap-3 bg-amber-100/80 p-2.5 rounded-xl border border-amber-600/50">
+                    <div class="flex items-center gap-3">
+                        <div class="relative w-14 h-14 rounded-full border-3 border-red-700 shadow-md overflow-hidden bg-red-100 flex items-center justify-center flex-shrink-0">
+                            <canvas id="cam-avatar-preview" width="120" height="120" class="w-full h-full object-cover"></canvas>
+                        </div>
+                        <div>
+                            <div class="text-xs font-extrabold text-red-900">Gắn mặt bạn thân vào Cám</div>
+                            <div class="text-[11px] text-amber-800 leading-tight">Xuất hiện lúc rình cướp ốc & trên Sắc Phong cuối trận!</div>
+                        </div>
+                    </div>
+                    <label class="cursor-pointer bg-red-700 hover:bg-red-800 text-white text-xs font-bold px-3 py-2 rounded-xl shadow flex-shrink-0 transition active:scale-95">
+                        📷 Chọn Ảnh
+                        <input id="input-cam-avatar" type="file" accept="image/*" class="hidden">
+                    </label>
+                </div>
+            </div>
+
+            <!-- Hướng dẫn nhanh -->
+            <div class="grid grid-cols-3 gap-2 text-center mb-4 text-xs">
+                <div class="bg-emerald-100 border border-emerald-700 rounded-xl p-2">
+                    <div class="text-xl">🦀 +1 | 🐚 +2</div>
+                    <div class="font-bold text-emerald-900 mt-0.5">Bấm bắt ngay</div>
+                </div>
+                <div class="bg-stone-200 border border-stone-600 rounded-xl p-2">
+                    <div class="text-xl">🪨 Đá / Vỏ vỡ</div>
+                    <div class="font-bold text-stone-800 mt-0.5">Trừ 1s, rung giỏ</div>
+                </div>
+                <div class="bg-red-100 border border-red-700 rounded-xl p-2">
+                    <div class="text-xl">😈 Mặt Cám</div>
+                    <div class="font-bold text-red-900 mt-0.5">Mất 3 con ốc!</div>
+                </div>
+            </div>
+
+            <!-- Nút Bắt Đầu -->
+            <button onclick="startGame()" class="folk-btn w-full bg-gradient-to-r from-red-700 via-red-600 to-amber-600 hover:from-red-800 hover:to-amber-700 text-amber-50 font-black text-lg sm:text-xl py-3.5 rounded-2xl border-2 border-amber-200 tracking-wide uppercase cursor-pointer">
+                🧺 BẮT ĐẦU MÒ CUA NGAY!
+            </button>
+        </section>
+
+        <!-- ==========================================
+             2. MÀN HÌNH CHƠI CHÍNH (GAMEPLAY)
+        =========================================== -->
+        <section id="screen-game" class="hidden folk-card rounded-3xl p-3 sm:p-5 relative overflow-hidden">
+            
+            <!-- Thanh HUD trên cùng -->
+            <div class="grid grid-cols-2 gap-2.5 mb-3">
+                <!-- Giỏ Ốc của Tấm -->
+                <div id="hud-basket" class="bg-amber-100 border-2 border-amber-800 rounded-2xl p-2.5 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl sm:text-3xl">🧺</span>
+                        <div>
+                            <div class="text-[10px] sm:text-xs font-bold uppercase text-amber-800">Giỏ của <span id="hud-tam-name">Cô Tấm</span></div>
+                            <div class="text-lg sm:text-xl font-black text-emerald-800 leading-none">
+                                <span id="score-current">0</span><span class="text-amber-900 text-sm font-bold"> / 15 con</span>
+                            </div>
+                        </div>
+                    </div>
+                    <span id="goal-badge" class="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-300 text-amber-950">Chưa đủ</span>
+                </div>
+
+                <!-- Đồng hồ đếm ngược -->
+                <div class="bg-amber-100 border-2 border-amber-800 rounded-2xl p-2.5 flex items-center justify-between shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-2xl sm:text-3xl">⏳</span>
+                        <div>
+                            <div class="text-[10px] sm:text-xs font-bold uppercase text-amber-800">Hoàng hôn</div>
+                            <div id="timer-display" class="text-lg sm:text-xl font-black text-amber-950 leading-none">
+                                45s
+                            </div>
+                        </div>
+                    </div>
+                    <button onclick="toggleAudio()" id="btn-mute-ingame" class="text-lg bg-amber-200/80 w-8 h-8 rounded-full flex items-center justify-center border border-amber-700">
+                        🔊
+                    </button>
+                </div>
+            </div>
+
+            <!-- Hộp Thoại Trêu Ngươi Của Cám -->
+            <div id="cam-taunt-banner" class="mb-2.5 bg-red-100 border-2 border-red-700 rounded-xl px-3 py-1.5 flex items-center gap-2.5 transition-all duration-200 opacity-95">
+                <img id="taunt-cam-img" src="" alt="Cám" class="w-8 h-8 rounded-full border-2 border-red-700 object-cover flex-shrink-0">
+                <p id="cam-taunt-text" class="text-xs sm:text-sm font-bold text-red-900 leading-snug">
+                    Hãy cẩn thận! Cám đang lấp ló sau bụi sen rình giỏ ốc của bạn kìa!
+                </p>
+            </div>
+
+            <!-- KHU VỰC ĐẦM LẦY ĐỊNH MỆNH (Lưới 3x3) -->
+            <div id="swamp-board" class="swamp-pond rounded-2xl p-3 sm:p-4 relative">
+                <!-- Trang trí hoa sen góc đầm -->
+                <div class=" flex justify-between items-center text-xs text-emerald-200/80 font-semibold mb-2 px-1">
+                    <span>🪷 Đầm Sen Làng Vũ Đại</span>
+                    <span>Chạm nhanh để bắt!</span>
+                </div>
+
+                <!-- Lưới 9 Ô Bùn -->
+                <div id="holes-grid" class="grid grid-cols-3 gap-2.5 sm:gap-3.5 aspect-square">
+                    <!-- 9 ô sẽ được render tự động bằng JS -->
+                </div>
+
+                <!-- LỚP PHỦ BÙN LẦY CHE MẮT (QTE 1) -->
+                <div id="mud-overlay-container" class="absolute inset-0 pointer-events-none z-20 overflow-hidden rounded-2xl">
+                    <!-- Các vết bùn sẽ sinh ra ở đây -->
+                </div>
+
+                <!-- SỰ KIỆN 7 GIÂY CUỐI: CÁM CƯỚP GIỎ (QTE 2) -->
+                <div id="qte-final-steal" class="hidden absolute inset-x-2 bottom-2 top-2 z-30 bg-red-950/90 backdrop-blur-sm rounded-xl border-4 border-amber-400 p-3 flex flex-col items-center justify-between text-center animate-pulse">
+                    <div class="bg-red-600 text-white text-xs sm:text-sm font-black px-3 py-1 rounded-full uppercase tracking-wider border border-amber-300 shadow">
+                        🚨 CẢNH BÁO KHẨN CẤP 7 GIÂY CUỐI! 🚨
+                    </div>
+
+                    <div class="flex flex-col items-center my-1">
+                        <div class="relative">
+                            <img id="qte-cam-img" src="" alt="Cám" class="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-4 border-red-500 shadow-lg object-cover">
+                            <span class="absolute -bottom-1 -right-1 text-2xl">🤏🧺</span>
+                        </div>
+                        <p class="text-amber-200 font-black text-sm sm:text-base mt-2 px-2 leading-tight">
+                            <span id="qte-cam-name" class="text-yellow-300 underline">Con Cám</span> ĐANG LAO TỚI TRÁO GIỎ!
+                        </p>
+                        <p class="text-white text-xs mt-0.5">Bấm liên tục để giữ chặt quai giỏ trước khi hết giờ!</p>
+                    </div>
+
+                    <!-- Thanh tiến độ giữ giỏ -->
+                    <div class="w-full max-w-xs bg-red-900 rounded-full h-4 border-2 border-amber-300 overflow-hidden mb-2">
+                        <div id="qte-progress-bar" class="bg-gradient-to-r from-yellow-400 to-emerald-400 h-full transition-all duration-100" style="width: 0%"></div>
+                    </div>
+
+                    <button id="btn-hold-basket" onclick="tapHoldBasket()" class="w-full py-3.5 bg-gradient-to-b from-amber-400 to-amber-600 active:from-amber-500 active:to-amber-700 text-red-950 font-black text-base sm:text-lg rounded-xl border-2 border-white shadow-xl uppercase tracking-wide cursor-pointer">
+                        ✊ GIỮ CHẶT GIỎ! (Còn <span id="qte-clicks-left">8</span> lần)
+                    </button>
+                </div>
+            </div>
+
+            <!-- Thanh trạng thái phụ bên dưới -->
+            <div class="mt-2.5 flex justify-between items-center text-[11px] sm:text-xs font-bold text-amber-900 px-1">
+                <span>💡 Mẹo: Lau sạch vết bùn nếu bị Cám ném bùn!</span>
+                <span id="mud-status-indicator" class="text-emerald-800">Tầm nhìn: Rõ ràng ✨</span>
+            </div>
+        </section>
+
+        <!-- ==========================================
+             3. MÀN HÌNH KẾT THÚC & SẮC PHONG CHỨNG NHẬN
+        =========================================== -->
+        <section id="screen-end" class="hidden folk-card rounded-3xl p-4 sm:p-6 relative overflow-hidden">
+            
+            <!-- CẮT CẢNH (CUTSCENE) -->
+            <div id="cutscene-box" class="rounded-2xl border-3 border-amber-900 p-3.5 mb-4 text-center relative overflow-hidden shadow-inner bg-amber-100">
+                <div id="cutscene-visual" class="h-28 sm:h-32 flex items-center justify-center gap-3 relative">
+                    <!-- Nội dung Hoạt cảnh Thắng / Thua sẽ được chèn bằng JS -->
+                </div>
+                <p id="cutscene-story" class="text-xs sm:text-sm font-bold text-amber-950 bg-white/85 p-2.5 rounded-xl border border-amber-700 leading-relaxed">
+                    <!-- Câu thông báo kết quả -->
+                </p>
+            </div>
+
+            <!-- THẺ SẮC PHONG "GIẤY CHỨNG NHẬN MÒ CUA" -->
+            <div class="mb-4">
+                <div class="flex items-center justify-between mb-1.5 px-1">
+                    <span class="text-xs font-extrabold uppercase text-red-900 tracking-wider">📜 Sắc Phong Lưu Danh Cổ Tích:</span>
+                    <span class="text-[11px] font-semibold text-amber-800">Có thể tải ảnh về khoe ngay!</span>
+                </div>
+
+                <!-- Bản hiển thị trực tiếp bằng Canvas chất lượng cao để nhìn đẹp & xuất PNG chuẩn 100% -->
+                <div class="rounded-xl overflow-hidden shadow-lg border-2 border-amber-900 bg-amber-50">
+                    <canvas id="certificate-canvas" width="800" height="520" class="w-full h-auto block"></canvas>
+                </div>
+            </div>
+
+            <!-- CÁC NÚT TƯƠNG TÁC VIRAL CUỐI MÀN -->
+            <div class="space-y-2.5">
+                <button onclick="downloadCertificatePNG()" class="folk-btn w-full bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-800 hover:to-teal-800 text-white font-black text-sm sm:text-base py-3 rounded-xl border-2 border-emerald-200 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>📥</span>
+                    <span>TẢI ẢNH CHỨNG NHẬN (Khoe Facebook/TikTok)</span>
+                </button>
+
+                <button onclick="copyChallengeText()" class="folk-btn w-full bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-800 hover:to-indigo-800 text-white font-black text-sm sm:text-base py-3 rounded-xl border-2 border-blue-200 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>💬</span>
+                    <span>COPY LỜI THÁCH ĐẤU GỬI MESSENGER</span>
+                </button>
+
+                <button onclick="resetToStart()" class="folk-btn w-full bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-amber-950 font-black text-sm sm:text-base py-3 rounded-xl border-2 border-amber-900 flex items-center justify-center gap-2 cursor-pointer">
+                    <span>🔄</span>
+                    <span>CHƠI LẠI PHỤC THÙ</span>
+                </button>
+            </div>
+        </section>
+
+    </div>
+
+    <script>
+        /* =========================================================
+           QUẢN LÝ TRẠNG THÁI & CẤU HÌNH GAME
+        ========================================================= */
+        const GAME_CONFIG = {
+            GOAL_SCORE: 15,
+            TOTAL_TIME: 45,
+            QTE_FINAL_SECONDS: 7,
+            QTE_REQUIRED_CLICKS: 8
+        };
+
+        let state = {
+            tamName: "Cô Tấm",
+            camName: "Con Cám",
+            camAvatarDataUrl: null, // Chứa ảnh tròn của Cám
+            score: 0,
+            timeLeft: GAME_CONFIG.TOTAL_TIME,
+            isPlaying: false,
+            audioEnabled: true,
+            holes: Array(9).fill(null),
+            qteTriggered: false,
+            qteCompleted: false,
+            qteClicksLeft: GAME_CONFIG.QTE_REQUIRED_CLICKS,
+            mudCleanedCount: 0,
+            activeMudCount: 0,
+            wasRobbedAtEnd: false,
+            timers: {
+                mainCountdown: null,
+                spawner: null,
+                mudEvent: null
+            }
+        };
+
+        /* =========================================================
+           HỆ THỐNG ÂM THANH (WEB AUDIO API - KHÔNG DÙNG FILE NGOÀI)
+        ========================================================= */
+        let audioCtx = null;
+
+        function initAudio() {
+            if (!audioCtx) {
+                const AudioContext = window.AudioContext || window.webkitAudioContext;
+                audioCtx = new AudioContext();
+            }
+            if (audioCtx && audioCtx.state === 'suspended') {
+                audioCtx.resume();
+            }
+        }
+
+        function toggleAudio() {
+            state.audioEnabled = !state.audioEnabled;
+            const btnStart = document.getElementById('btn-mute');
+            const btnGame = document.getElementById('btn-mute-ingame');
+            if (btnStart) btnStart.textContent = state.audioEnabled ? '🔊 Âm thanh: BẬT' : '🔇 Âm thanh: TẮT';
+            if (btnGame) btnGame.textContent = state.audioEnabled ? '🔊' : '🔇';
+        }
+
+        function playSound(type) {
+            if (!state.audioEnabled) return;
+            try {
+                initAudio();
+                const now = audioCtx.currentTime;
+
+                if (type === 'crab') {
+                    // Tiếng pop vui nhộn (+1)
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(520, now);
+                    osc.frequency.exponentialRampToValueAtTime(880, now + 0.12);
+                    gain.gain.setValueAtTime(0.25, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.14);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.14);
+                } 
+                else if (type === 'snail') {
+                    // Tiếng ting kép lấp lánh (+2)
+                    [660, 990].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.07);
+                        gain.gain.setValueAtTime(0.25, now + idx * 0.07);
+                        gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.07 + 0.15);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.07);
+                        osc.stop(now + idx * 0.07 + 0.15);
+                    });
+                }
+                else if (type === 'rock') {
+                    // Tiếng bộp trầm khi trượt tay bấm đá
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'square';
+                    osc.frequency.setValueAtTime(160, now);
+                    osc.frequency.linearRampToValueAtTime(75, now + 0.18);
+                    gain.gain.setValueAtTime(0.2, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.18);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.18);
+                }
+                else if (type === 'cam_laugh') {
+                    // Tiếng buzzer/cười trêu ngươi của Cám
+                    [320, 260, 200].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.09);
+                        gain.gain.setValueAtTime(0.22, now + idx * 0.09);
+                        gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.09 + 0.08);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.09);
+                        osc.stop(now + idx * 0.09 + 0.08);
+                    });
+                }
+                else if (type === 'mud_wipe') {
+                    // Tiếng lau bùn xoẹt nhẹ
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(300, now);
+                    osc.frequency.linearRampToValueAtTime(620, now + 0.08);
+                    gain.gain.setValueAtTime(0.18, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.09);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.09);
+                }
+                else if (type === 'alarm') {
+                    // Còi cảnh báo Cám cướp giỏ
+                    const osc = audioCtx.createOscillator();
+                    const gain = audioCtx.createGain();
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(440, now);
+                    osc.frequency.linearRampToValueAtTime(740, now + 0.22);
+                    gain.gain.setValueAtTime(0.22, now);
+                    gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+                    osc.connect(gain);
+                    gain.connect(audioCtx.destination);
+                    osc.start(now);
+                    osc.stop(now + 0.25);
+                }
+                else if (type === 'win') {
+                    // Nhạc hiệu chiến thắng
+                    [523.25, 659.25, 783.99, 1046.5].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'triangle';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.11);
+                        gain.gain.setValueAtTime(0.25, now + idx * 0.11);
+                        gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.11 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.11);
+                        osc.stop(now + idx * 0.11 + 0.25);
+                    });
+                }
+                else if (type === 'lose') {
+                    // Nhạc hiệu tiếc nuối
+                    [392, 349.23, 329.63, 261.63].forEach((freq, idx) => {
+                        const osc = audioCtx.createOscillator();
+                        const gain = audioCtx.createGain();
+                        osc.type = 'sawtooth';
+                        osc.frequency.setValueAtTime(freq, now + idx * 0.15);
+                        gain.gain.setValueAtTime(0.18, now + idx * 0.15);
+                        gain.gain.linearRampToValueAtTime(0.01, now + idx * 0.15 + 0.25);
+                        osc.connect(gain);
+                        gain.connect(audioCtx.destination);
+                        osc.start(now + idx * 0.15);
+                        osc.stop(now + idx * 0.15 + 0.25);
+                    });
+                }
+            } catch (e) {
+                // Bỏ qua nếu trình duyệt chặn tự phát âm thanh
+            }
+        }
+
+        /* =========================================================
+           XỬ LÝ AVATAR CÁM (MẶC ĐỊNH & UPLOAD ẢNH CẮT TRÒN)
+        ========================================================= */
+        function drawDefaultCamAvatar() {
+            const canvas = document.getElementById('cam-avatar-preview');
+            const ctx = canvas.getContext('2d');
+            const w = canvas.width;
+            const h = canvas.height;
+
+            ctx.clearRect(0, 0, w, h);
+
+            // Nền tròn đỏ cam dân gian
+            const grad = ctx.createRadialGradient(w/2, h/2, 10, w/2, h/2, w/2);
+            grad.addColorStop(0, '#fde047');
+            grad.addColorStop(1, '#f97316');
+            ctx.fillStyle = grad;
+            ctx.beginPath();
+            ctx.arc(w/2, h/2, w/2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Tóc vấn khăn cổ truyền
+            ctx.fillStyle = '#1c1917';
+            ctx.beginPath();
+            ctx.arc(w/2, h/2 - 8, 36, Math.PI, 0, false);
+            ctx.fill();
+
+            // Khuôn mặt Cám
+            ctx.fillStyle = '#fef3c7';
+            ctx.beginPath();
+            ctx.arc(w/2, h/2 + 6, 30, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Lông mày xếch gian xảo
+            ctx.strokeStyle = '#451a03';
+            ctx.lineWidth = 3.5;
+            ctx.lineCap = 'round';
+            // Mày trái
+            ctx.beginPath();
+            ctx.moveTo(w/2 - 20, h/2 - 4);
+            ctx.lineTo(w/2 - 6, h/2 + 1);
+            ctx.stroke();
+            // Mày phải
+            ctx.beginPath();
+            ctx.moveTo(w/2 + 20, h/2 - 4);
+            ctx.lineTo(w/2 + 6, h/2 + 1);
+            ctx.stroke();
+
+            // Đôi mắt liếc
+            ctx.fillStyle = '#1c1917';
+            ctx.beginPath();
+            ctx.arc(w/2 - 11, h/2 + 6, 3.5, 0, Math.PI * 2);
+            ctx.arc(w/2 + 13, h/2 + 6, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Nụ cười nhếch mép
+            ctx.strokeStyle = '#dc2626';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(w/2 + 2, h/2 + 15, 11, 0.1 * Math.PI, 0.85 * Math.PI);
+            ctx.stroke();
+
+            // Má hồng
+            ctx.fillStyle = 'rgba(239, 68, 68, 0.35)';
+            ctx.beginPath();
+            ctx.arc(w/2 - 18, h/2 + 13, 5, 0, Math.PI * 2);
+            ctx.arc(w/2 + 18, h/2 + 13, 5, 0, Math.PI * 2);
+            ctx.fill();
+
+            state.camAvatarDataUrl = canvas.toDataURL('image/png');
+        }
+
+        // Lắng nghe sự kiện người chơi tải ảnh bạn thân lên
+        document.getElementById('input-cam-avatar').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.getElementById('cam-avatar-preview');
+                    const ctx = canvas.getContext('2d');
+                    const size = canvas.width;
+
+                    ctx.clearRect(0, 0, size, size);
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+
+                    // Crop chính giữa hình vuông
+                    const minSide = Math.min(img.width, img.height);
+                    const sx = (img.width - minSide) / 2;
+                    const sy = (img.height - minSide) / 2;
+                    ctx.drawImage(img, sx, sy, minSide, minSide, 0, 0, size, size);
+                    ctx.restore();
+
+                    // Viền tròn đỏ nổi bật
+                    ctx.strokeStyle = '#dc2626';
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    ctx.arc(size / 2, size / 2, size / 2 - 3, 0, Math.PI * 2);
+                    ctx.stroke();
+
+                    state.camAvatarDataUrl = canvas.toDataURL('image/png');
+                    showToast("Đã gắn mặt bạn thân vào vai Cám thành công! 😈");
+                };
+                img.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        /* =========================================================
+           KHỞI TẠO LƯỚI 9 Ô BÙN ĐẦM LẦY
+        ========================================================= */
+        function buildSwampGrid() {
+            const grid = document.getElementById('holes-grid');
+            grid.innerHTML = '';
+
+            for (let i = 0; i < 9; i++) {
+                const hole = document.createElement('div');
+                hole.className = 'mud-hole rounded-2xl flex items-end justify-center select-none cursor-pointer relative';
+                hole.dataset.index = i;
+
+                hole.innerHTML = `
+                    <!-- Gợn nước & Lá sen trang trí -->
+                    <div class="water-ripple absolute inset-2 rounded-full border border-teal-400/20 pointer-events-none"></div>
+                    <div class="absolute top-1.5 left-2 text-xs opacity-60 pointer-events-none">🌿</div>
+                    <div class="absolute bottom-1 right-2 text-[10px] text-teal-200/40 pointer-events-none">🫧</div>
+                    
+                    <!-- Vùng chứa đối tượng ngoi lên -->
+                    <div id="entity-slot-${i}" class="entity-spawn w-full h-full flex flex-col items-center justify-center p-1 relative z-10">
+                    </div>
+
+                    <!-- Lớp sóng bùn che chân -->
+                    <div class="absolute bottom-0 inset-x-0 h-3 bg-gradient-to-t from-stone-950 to-transparent pointer-events-none z-20"></div>
+                `;
+
+                // Sự kiện chạm/click vào ô bùn
+                hole.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    handleHoleTap(i, hole);
+                });
+
+                grid.appendChild(hole);
+            }
+        }
+
+        /* =========================================================
+           BẮT ĐẦU TRÒ CHƠI & VÒNG LẶP CHÍNH
+        ========================================================= */
+        function startGame() {
+            initAudio();
+
+            const tamInput = document.getElementById('input-tam-name').value.trim();
+            const camInput = document.getElementById('input-cam-name').value.trim();
+            state.tamName = tamInput || "Cô Tấm";
+            state.camName = camInput || "Con Cám";
+
+            // Reset thông số
+            state.score = 0;
+            state.timeLeft = GAME_CONFIG.TOTAL_TIME;
+            state.isPlaying = true;
+            state.qteTriggered = false;
+            state.qteCompleted = false;
+            state.qteClicksLeft = GAME_CONFIG.QTE_REQUIRED_CLICKS;
+            state.activeMudCount = 0;
+            state.wasRobbedAtEnd = false;
+            state.holes.fill(null);
+
+            // Cập nhật UI ban đầu
+            document.getElementById('hud-tam-name').textContent = state.tamName;
+            document.getElementById('taunt-cam-img').src = state.camAvatarDataUrl;
+            document.getElementById('qte-cam-img').src = state.camAvatarDataUrl;
+            document.getElementById('qte-cam-name').textContent = state.camName;
+            document.getElementById('cam-taunt-text').textContent = `${state.camName} đang lấp ló bờ tre canh giỏ ốc của bạn kìa!`;
+            document.getElementById('mud-overlay-container').innerHTML = '';
+            document.getElementById('qte-final-steal').classList.add('hidden');
+            document.getElementById('timer-display').classList.remove('timer-danger');
+
+            updateScoreHUD();
+            updateTimerHUD();
+            buildSwampGrid();
+
+            // Chuyển màn hình
+            document.getElementById('screen-start').classList.add('hidden');
+            document.getElementById('screen-end').classList.add('hidden');
+            document.getElementById('screen-game').classList.remove('hidden');
+
+            // Bắt đầu bộ đếm thời gian 45 giây
+            clearAllTimers();
+            state.timers.mainCountdown = setInterval(gameTick, 1000);
+
+            // Bắt đầu sinh đối tượng ở đầm lầy
+            scheduleNextSpawn();
+
+            // Lên lịch sự kiện Cám tung bùn giữa trận
+            state.timers.mudEvent = setTimeout(triggerMudSplashEvent, 11000);
+        }
+
+        function clearAllTimers() {
+            if (state.timers.mainCountdown) clearInterval(state.timers.mainCountdown);
+            if (state.timers.spawner) clearTimeout(state.timers.spawner);
+            if (state.timers.mudEvent) clearTimeout(state.timers.mudEvent);
+        }
+
+        function gameTick() {
+            if (!state.isPlaying) return;
+
+            state.timeLeft--;
+            updateTimerHUD();
+
+            // Cảnh báo đỏ dưới 10 giây
+            const timerEl = document.getElementById('timer-display');
+            if (state.timeLeft <= 10) {
+                timerEl.classList.add('timer-danger');
+            }
+
+            // Gọi thêm 1 đợt Cám tung bùn ở giây 24 nếu chưa quá bận
+            if (state.timeLeft === 24 && state.activeMudCount === 0) {
+                triggerMudSplashEvent();
+            }
+
+            // Kích hoạt Sự Kiện Đặc Biệt ở 7 giây cuối: CÁM CƯỚP GIỎ
+            if (state.timeLeft === GAME_CONFIG.QTE_FINAL_SECONDS && !state.qteTriggered) {
+                triggerFinalStealQTE();
+            }
+
+            // Hết giờ
+            if (state.timeLeft <= 0) {
+                finishGame();
+            }
+        }
+
+        function updateScoreHUD() {
+            document.getElementById('score-current').textContent = state.score;
+            const badge = document.getElementById('goal-badge');
+            if (state.score >= GAME_CONFIG.GOAL_SCORE) {
+                badge.textContent = "Đủ chỉ tiêu! ✨";
+                badge.className = "text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-emerald-600 text-white";
+            } else {
+                badge.textContent = `Thiếu ${GAME_CONFIG.GOAL_SCORE - state.score} con`;
+                badge.className = "text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-amber-300 text-amber-950";
+            }
+        }
+
+        function updateTimerHUD() {
+            document.getElementById('timer-display').textContent = `${Math.max(0, state.timeLeft)}s`;
+        }
+
+        /* =========================================================
+           CƠ CHẾ NGOI LÊN TỪ Ô BÙN (SPAWNER TỐC ĐỘ TĂNG DẦN)
+        ========================================================= */
+        function scheduleNextSpawn() {
+            if (!state.isPlaying) return;
+
+            // Tốc độ tăng dần khi thời gian giảm
+            const elapsed = GAME_CONFIG.TOTAL_TIME - state.timeLeft;
+            const minDelay = Math.max(260, 620 - elapsed * 8);
+            const maxDelay = Math.max(450, 950 - elapsed * 10);
+            const nextDelay = Math.floor(Math.random() * (maxDelay - minDelay + 1)) + minDelay;
+
+            state.timers.spawner = setTimeout(() => {
+                spawnEntityInRandomHole();
+                scheduleNextSpawn();
+            }, nextDelay);
+        }
+
+        function spawnEntityInRandomHole() {
+            if (!state.isPlaying) return;
+
+            // Tìm các ô đang trống
+            const emptyIndices = [];
+            for (let i = 0; i < 9; i++) {
+                if (!state.holes[i]) emptyIndices.push(i);
+            }
+            if (emptyIndices.length === 0) return;
+
+            const holeIdx = emptyIndices[Math.floor(Math.random() * emptyIndices.length)];
+
+            // Tỉ lệ xuất hiện: Cua vàng (40%), Ốc ngọc (22%), Vật cản (18%), Cám rình rập (20%)
+            const rand = Math.random();
+            let type = 'crab';
+            if (rand < 0.40) type = 'crab';
+            else if (rand < 0.62) type = 'snail';
+            else if (rand < 0.80) type = 'rock';
+            else type = 'cam';
+
+            const elapsed = GAME_CONFIG.TOTAL_TIME - state.timeLeft;
+            const stayDuration = Math.max(750, 1550 - elapsed * 14);
+
+            const slotEl = document.getElementById(`entity-slot-${holeIdx}`);
+            if (!slotEl) return;
+
+            // Render giao diện đối tượng
+            if (type === 'crab') {
+                slotEl.innerHTML = `
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-amber-400/25 border-2 border-amber-300 flex flex-col items-center justify-center shadow-inner">
+                        <span class="text-3xl sm:text-4xl drop-shadow">🦀</span>
+                        <span class="text-[10px] font-black text-amber-200 leading-none">+1 Cua</span>
+                    </div>
+                `;
+            } else if (type === 'snail') {
+                slotEl.innerHTML = `
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-teal-400/30 border-2 border-cyan-300 flex flex-col items-center justify-center shadow-inner">
+                        <span class="text-3xl sm:text-4xl drop-shadow">🐚</span>
+                        <span class="text-[10px] font-black text-cyan-200 leading-none">+2 Ốc Ngọc</span>
+                    </div>
+                `;
+            } else if (type === 'rock') {
+                const obstacleEmoji = Math.random() > 0.5 ? '🪨' : '🦪';
+                slotEl.innerHTML = `
+                    <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-stone-500/30 border-2 border-stone-400 flex flex-col items-center justify-center">
+                        <span class="text-3xl sm:text-4xl">${obstacleEmoji}</span>
+                        <span class="text-[10px] font-bold text-stone-300 leading-none">Đá/Vỏ vỡ</span>
+                    </div>
+                `;
+            } else if (type === 'cam') {
+                slotEl.innerHTML = `
+                    <div class="relative flex flex-col items-center">
+                        <div class="w-14 h-14 sm:w-16 sm:h-16 rounded-full border-3 border-red-500 ring-4 ring-red-600/50 overflow-hidden shadow-lg bg-red-900">
+                            <img src="${state.camAvatarDataUrl}" class="w-full h-full object-cover" alt="Cám">
+                        </div>
+                        <span class="bg-red-600 text-white text-[9px] sm:text-[10px] font-extrabold px-1.5 py-0.2 rounded-full -mt-2 border border-amber-200 truncate max-w-[75px]">
+                            ${state.camName}
+                        </span>
+                    </div>
+                `;
+            }
+
+            // Kích hoạt hiệu ứng trồi lên
+            requestAnimationFrame(() => {
+                slotEl.classList.add('active');
+            });
+
+            // Lưu thông tin vào ô
+            const timeoutId = setTimeout(() => {
+                hideEntityInHole(holeIdx);
+            }, stayDuration);
+
+            state.holes[holeIdx] = {
+                type,
+                timeoutId,
+                hit: false
+            };
+        }
+
+        function hideEntityInHole(holeIdx) {
+            const holeData = state.holes[holeIdx];
+            if (!holeData) return;
+
+            clearTimeout(holeData.timeoutId);
+            const slotEl = document.getElementById(`entity-slot-${holeIdx}`);
+            if (slotEl) {
+                slotEl.classList.remove('active');
+            }
+            setTimeout(() => {
+                if (state.holes[holeIdx] === holeData) {
+                    state.holes[holeIdx] = null;
+                    if (slotEl) slotEl.innerHTML = '';
+                }
+            }, 150);
+        }
+
+        /* =========================================================
+           XỬ LÝ KHI NGƯỜI CHƠI BẤM VÀO Ô BÙN
+        ========================================================= */
+        function handleHoleTap(holeIdx, holeEl) {
+            if (!state.isPlaying) return;
+            const holeData = state.holes[holeIdx];
+            if (!holeData || holeData.hit) return;
+
+            holeData.hit = true;
+            const type = holeData.type;
+
+            if (type === 'crab') {
+                state.score += 1;
+                playSound('crab');
+                spawnFloatingFeedback(holeEl, '+1 🦀', 'text-amber-300');
+                updateScoreHUD();
+            } 
+            else if (type === 'snail') {
+                state.score += 2;
+                playSound('snail');
+                spawnFloatingFeedback(holeEl, '+2 🐚', 'text-cyan-300');
+                updateScoreHUD();
+            } 
+            else if (type === 'rock') {
+                state.timeLeft = Math.max(0, state.timeLeft - 1);
+                playSound('rock');
+                spawnFloatingFeedback(holeEl, 'Trượt tay! -1s', 'text-stone-300');
+                triggerShake('hud-basket');
+                updateTimerHUD();
+            } 
+            else if (type === 'cam') {
+                state.score = Math.max(0, state.score - 3);
+                playSound('cam_laugh');
+                spawnFloatingFeedback(holeEl, '-3 Ốc! 😈', 'text-red-400');
+                triggerShake('swamp-board');
+                updateScoreHUD();
+
+                // Hiển thị câu thoại lịch sự nhưng trêu ngươi của Cám
+                const bannerText = document.getElementById('cam-taunt-text');
+                bannerText.textContent = `${state.camName}: "Cảm ơn chị ${state.tamName} nhé, em xin 3 con ốc!"`;
+                const bannerBox = document.getElementById('cam-taunt-banner');
+                bannerBox.classList.remove('shake-anim');
+                void bannerBox.offsetWidth;
+                bannerBox.classList.add('shake-anim');
+            }
+
+            hideEntityInHole(holeIdx);
+        }
+
+        function spawnFloatingFeedback(parentEl, text, colorClass) {
+            const floatEl = document.createElement('div');
+            floatEl.className = `floating-text absolute inset-x-0 top-1/3 text-center font-black text-sm sm:text-base drop-shadow-[0_2px_2px_rgba(0,0,0,0.9)] z-30 ${colorClass}`;
+            floatEl.textContent = text;
+            parentEl.appendChild(floatEl);
+            setTimeout(() => floatEl.remove(), 750);
+        }
+
+        function triggerShake(elementId) {
+            const el = document.getElementById(elementId);
+            if (!el) return;
+            el.classList.remove('shake-anim');
+            void el.offsetWidth;
+            el.classList.add('shake-anim');
+        }
+
+        /* =========================================================
+           SỰ KIỆN ĐẶC BIỆT 1: CÁM TUNG BÙN LẦY CHE MẮT
+        ========================================================= */
+        function triggerMudSplashEvent() {
+            if (!state.isPlaying || state.timeLeft <= 8) return;
+
+            playSound('rock');
+            const container = document.getElementById('mud-overlay-container');
+            container.innerHTML = '';
+            state.activeMudCount = 3;
+            updateMudIndicator();
+
+            document.getElementById('cam-taunt-text').textContent = `${state.camName} vừa hất 3 bãi bùn lầy! Chạm nhanh vào vết bùn để lau sạch!`;
+
+            const positions = [
+                { top: '12%', left: '10%' },
+                { top: '38%', left: '42%' },
+                { top: '55%', left: '16%' }
+            ];
+
+            positions.forEach((pos, idx) => {
+                const mud = document.createElement('div');
+                mud.className = 'mud-splat pointer-events-auto absolute w-36 h-36 sm:w-44 sm:h-44 flex flex-col items-center justify-center select-none';
+                mud.style.top = pos.top;
+                mud.style.left = pos.left;
+
+                mud.innerHTML = `
+                    <svg viewBox="0 0 200 200" class="w-full h-full drop-shadow-2xl">
+                        <path fill="#451a03" stroke="#78350f" stroke-width="5" d="M44.7,-67.2C58.9,-59.3,72,-48.3,79.6,-33.9C87.2,-19.6,89.3,-1.8,85.5,14.3C81.8,30.5,72.2,45,59.3,56.5C46.4,68,30.2,76.5,12.7,79.8C-4.8,83,-23.5,81.1,-39.3,73.1C-55.1,65.2,-68,51.2,-75.6,34.7C-83.2,18.2,-85.5,-0.9,-80.7,-17.8C-75.9,-34.7,-64,-49.4,-49.6,-57.4C-35.2,-65.4,-17.6,-66.7,-1.2,-65C15.2,-63.3,30.5,-75.1,44.7,-67.2Z" transform="translate(100 100)" />
+                        <circle cx="65" cy="70" r="12" fill="#291d19"/>
+                        <circle cx="135" cy="120" r="16" fill="#291d19"/>
+                    </svg>
+                    <span class="absolute bg-amber-300 text-amber-950 font-black text-xs px-2.5 py-1 rounded-full border-2 border-amber-900 shadow">
+                        👋 Chạm lau bùn!
+                    </span>
+                `;
+
+                mud.addEventListener('pointerdown', (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    playSound('mud_wipe');
+                    mud.remove();
+                    state.activeMudCount = Math.max(0, state.activeMudCount - 1);
+                    updateMudIndicator();
+                });
+
+                container.appendChild(mud);
+            });
+        }
+
+        function updateMudIndicator() {
+            const ind = document.getElementById('mud-status-indicator');
+            if (state.activeMudCount > 0) {
+                ind.textContent = `Bị bùn che mắt (${state.activeMudCount}/3)! 👋`;
+                ind.className = "text-red-700 font-black animate-bounce";
+            } else {
+                ind.textContent = "Tầm nhìn: Rõ ràng ✨";
+                ind.className = "text-emerald-800 font-bold";
+            }
+        }
+
+        /* =========================================================
+           SỰ KIỆN ĐẶC BIỆT 2: 7 GIÂY CUỐI CÁM LAO TỚI CƯỚP GIỎ
+        ========================================================= */
+        function triggerFinalStealQTE() {
+            state.qteTriggered = true;
+            state.qteCompleted = false;
+            state.qteClicksLeft = GAME_CONFIG.QTE_REQUIRED_CLICKS;
+
+            playSound('alarm');
+            document.getElementById('qte-clicks-left').textContent = state.qteClicksLeft;
+            document.getElementById('qte-progress-bar').style.width = '0%';
+            document.getElementById('qte-final-steal').classList.remove('hidden');
+        }
+
+        function tapHoldBasket() {
+            if (!state.isPlaying || state.qteCompleted) return;
+
+            state.qteClicksLeft = Math.max(0, state.qteClicksLeft - 1);
+            playSound('crab');
+
+            const doneCount = GAME_CONFIG.QTE_REQUIRED_CLICKS - state.qteClicksLeft;
+            const percent = Math.min(100, Math.round((doneCount / GAME_CONFIG.QTE_REQUIRED_CLICKS) * 100));
+            document.getElementById('qte-progress-bar').style.width = `${percent}%`;
+            document.getElementById('qte-clicks-left').textContent = state.qteClicksLeft;
+
+            if (state.qteClicksLeft <= 0) {
+                state.qteCompleted = true;
+                playSound('snail');
+                document.getElementById('qte-final-steal').classList.add('hidden');
+                document.getElementById('cam-taunt-text').textContent = `Giỏi lắm! Bạn đã giữ chặt quai giỏ khiến ${state.camName} vồ hụt!`;
+                showToast(`Đã đẩy lùi pha cướp giỏ của ${state.camName}! 💪`);
+            }
+        }
+
+        /* =========================================================
+           KẾT THÚC MÀN CHƠI & XỬ LÝ THẮNG / THUA
+        ========================================================= */
+        function finishGame() {
+            state.isPlaying = false;
+            clearAllTimers();
+
+            // Kiểm tra điều kiện Cám cướp sạch giỏ ở 7 giây cuối
+            if (state.qteTriggered && !state.qteCompleted) {
+                state.wasRobbedAtEnd = true;
+                state.score = 0; // Cám cướp sạch giỏ ốc vào giây cuối cùng
+            } else if (state.score < GAME_CONFIG.GOAL_SCORE) {
+                state.wasRobbedAtEnd = false;
+            }
+
+            const isVictory = !state.wasRobbedAtEnd && state.score >= GAME_CONFIG.GOAL_SCORE;
+
+            if (isVictory) {
+                playSound('win');
+            } else {
+                playSound('lose');
+            }
+
+            // Chuyển sang màn hình Kết Thúc
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-end').classList.remove('hidden');
+
+            renderEndCutscene(isVictory);
+            renderCertificateCanvas(isVictory);
+        }
+
+        function renderEndCutscene(isVictory) {
+            const visualEl = document.getElementById('cutscene-visual');
+            const storyEl = document.getElementById('cutscene-story');
+
+            if (isVictory) {
+                visualEl.innerHTML = `
+                    <div class="flex items-center justify-center gap-4 sm:gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="text-4xl sm:text-5xl animate-bounce">🧺✨🐟</div>
+                            <span class="text-[11px] font-black text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-full mt-1 border border-emerald-600">
+                                ${state.tamName} (${state.score} con)
+                            </span>
+                        </div>
+                        <div class="text-2xl font-black text-amber-700">⚡</div>
+                        <div class="flex flex-col items-center opacity-85">
+                            <div class="relative">
+                                <img src="${state.camAvatarDataUrl}" class="w-16 h-16 rounded-full border-3 border-stone-600 grayscale object-cover" alt="Cám">
+                                <span class="absolute -bottom-1 -right-1 text-2xl">😭</span>
+                            </div>
+                            <span class="text-[11px] font-bold text-stone-700 mt-1">${state.camName} tiếc hùi hụi</span>
+                        </div>
+                    </div>
+                `;
+                storyEl.innerHTML = `🎉 <b class="text-emerald-800">Tuyệt vời!</b> Giỏ ốc đầy ắp (${state.score}/15 con) lấp lánh ánh vàng, cá bống ngoi lên bơi lội tung tăng, còn <b class="text-red-700">${state.camName}</b> chỉ biết đứng nhìn tiếc hùi hụi!`;
+            } else {
+                visualEl.innerHTML = `
+                    <div class="flex items-center justify-center gap-4 sm:gap-6">
+                        <div class="flex flex-col items-center">
+                            <div class="text-4xl sm:text-5xl">😭🌾</div>
+                            <span class="text-[11px] font-bold text-stone-700 mt-1">${state.tamName} ngồi khóc</span>
+                        </div>
+                        <div class="text-2xl font-black text-red-600">💨</div>
+                        <div class="flex flex-col items-center animate-bounce">
+                            <div class="relative">
+                                <img src="${state.camAvatarDataUrl}" class="w-16 h-16 rounded-full border-3 border-red-600 object-cover shadow-md" alt="Cám">
+                                <span class="absolute -bottom-1 -right-2 text-2xl">🧺🏃‍♀️🎋</span>
+                            </div>
+                            <span class="text-[11px] font-black text-red-800 bg-red-100 px-2 py-0.5 rounded-full mt-1 border border-red-500">
+                                ${state.camName} ôm giỏ chạy biến!
+                            </span>
+                        </div>
+                    </div>
+                `;
+                storyEl.innerHTML = `<i>"Thật tiếc nuối! Bạn đã để <b class="text-red-700">${state.camName}</b> qua mặt vào phút chót giống hệt trong truyện cổ tích. Hãy tập trung hơn ở lần thử sức tiếp theo nhé!"</i>`;
+            }
+        }
+
+        /* =========================================================
+           VẼ SẮC PHONG "GIẤY CHỨNG NHẬN MÒ CUA" TRÊN HTML5 CANVAS
+        ========================================================= */
+        function renderCertificateCanvas(isVictory) {
+            const canvas = document.getElementById('certificate-canvas');
+            const ctx = canvas.getContext('2d');
+            const W = canvas.width;
+            const H = canvas.height;
+
+            const drawCard = (avatarImg) => {
+                ctx.clearRect(0, 0, W, H);
+
+                // 1. Nền lụa vàng sắc phong cổ truyền
+                const bgGrad = ctx.createLinearGradient(0, 0, W, H);
+                bgGrad.addColorStop(0, '#fef08a');
+                bgGrad.addColorStop(0.5, '#fde047');
+                bgGrad.addColorStop(1, '#f59e0b');
+                ctx.fillStyle = bgGrad;
+                ctx.fillRect(0, 0, W, H);
+
+                // Họa tiết vân mây chìm
+                ctx.fillStyle = 'rgba(185, 28, 28, 0.06)';
+                for (let x = 40; x < W; x += 120) {
+                    for (let y = 40; y < H; y += 100) {
+                        ctx.beginPath();
+                        ctx.arc(x, y, 28, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                // 2. Viền khung Sắc Phong kép đỏ son
+                ctx.strokeStyle = '#991b1b';
+                ctx.lineWidth = 14;
+                ctx.strokeRect(18, 18, W - 36, H - 36);
+
+                ctx.strokeStyle = '#78350f';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(32, 32, W - 64, H - 64);
+
+                // 4 góc hoa văn cổ
+                const corners = [[32, 32], [W - 32, 32], [32, H - 32], [W - 32, H - 32]];
+                ctx.fillStyle = '#991b1b';
+                corners.forEach(([cx, cy]) => {
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 10, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+
+                // 3. Tiêu đề Sắc Phong
+                ctx.fillStyle = '#991b1b';
+                ctx.font = 'bold 20px "Be Vietnam Pro", sans-serif';
+                ctx.textAlign = 'center';
+                ctx.fillText('★ SẮC PHONG CỔ TÍCH ĐẠI VIỆT - GIẤY CHỨNG NHẬN MÒ CUA ★', W / 2, 72);
+
+                // 4. Tên Người Chơi
+                ctx.fillStyle = '#451a03';
+                ctx.font = '600 18px "Be Vietnam Pro", sans-serif';
+                ctx.fillText(`Ban tặng cho: ${state.tamName.toUpperCase()} (Thành tích: ${state.score}/15 Cua Ốc)`, W / 2, 105);
+
+                // 5. Danh hiệu chính
+                const mainTitle = isVictory 
+                    ? 'TẤM THỦ ĐẠO - BẬC THẦY MÒ CUA' 
+                    : 'TẤM NGÂY THƠ - MÒ CẢ BUỔI CHO CÁM HƯỞNG';
+
+                ctx.fillStyle = isVictory ? '#15803d' : '#b91c1c';
+                ctx.font = '900 27px "Be Vietnam Pro", sans-serif';
+                ctx.fillText(mainTitle, W / 2, 150);
+
+                // 6. Vẽ Avatar Cám & Huy hiệu chính giữa
+                const centerX = W / 2;
+                const centerY = 245;
+                const radius = 58;
+
+                if (avatarImg) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                    ctx.closePath();
+                    ctx.clip();
+                    ctx.drawImage(avatarImg, centerX - radius, centerY - radius, radius * 2, radius * 2);
+                    ctx.restore();
+                }
+
+                // Viền avatar Cám
+                ctx.strokeStyle = isVictory ? '#15803d' : '#dc2626';
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+                ctx.stroke();
+
+                // Nhãn dưới Avatar Cám
+                ctx.fillStyle = '#7f1d1d';
+                ctx.fillRect(centerX - 110, centerY + 46, 220, 28);
+                ctx.strokeStyle = '#fde047';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(centerX - 110, centerY + 46, 220, 28);
+
+                ctx.fillStyle = '#fef9c3';
+                ctx.font = 'bold 14px "Be Vietnam Pro", sans-serif';
+                ctx.fillText(`Vai Cám: ${state.camName}`, centerX, centerY + 65);
+
+                // 7. Phụ đề
+                const subTitle = isVictory
+                    ? `"${state.camName} thấy chỉ biết ngước nhìn!"`
+                    : `"Mò mẫn cả buổi để ${state.camName} húp trọn giỏ quà!"`;
+
+                ctx.fillStyle = '#991b1b';
+                ctx.font = 'italic bold 22px "Be Vietnam Pro", sans-serif';
+                ctx.fillText(subTitle, W / 2, 355);
+
+                // 8. Mô tả chi tiết
+                const desc = isVictory
+                    ? 'Thao tác nhanh nhẹn, bảo vệ trọn vẹn thành quả lao động trước mọi âm mưu tráo giỏ.'
+                    : 'Độ cảnh giác cần nâng cấp, nhẹ dạ cả tin trước chiêu trò đánh lạc hướng của đối thủ.';
+
+                ctx.fillStyle = '#451a03';
+                ctx.font = '600 16px "Be Vietnam Pro", sans-serif';
+                ctx.fillText(desc, W / 2, 392);
+
+                // 9. Con dấu đỏ "Ông Bụt Chứng Giám" ở góc phải dưới
+                ctx.save();
+                ctx.translate(W - 135, H - 85);
+                ctx.rotate(-0.12);
+                ctx.strokeStyle = 'rgba(185, 28, 28, 0.85)';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(-65, -28, 130, 56);
+                ctx.fillStyle = 'rgba(185, 28, 28, 0.85)';
+                ctx.font = '900 14px "Be Vietnam Pro", sans-serif';
+                ctx.fillText('ÔNG BỤT', 0, -5);
+                ctx.fillText('ẤN CHỨNG', 0, 15);
+                ctx.restore();
+
+                // Chữ ký góc trái dưới
+                ctx.fillStyle = '#78350f';
+                ctx.font = 'bold 13px "Be Vietnam Pro", sans-serif';
+                ctx.textAlign = 'left';
+                ctx.fillText('TẤM CÁM: BẢO VỆ GIỎ ỐC • Cám Ơi Trả Giỏ Cho Ta!', 48, H - 48);
+            };
+
+            if (state.camAvatarDataUrl) {
+                const img = new Image();
+                img.onload = () => drawCard(img);
+                img.src = state.camAvatarDataUrl;
+            } else {
+                drawCard(null);
+            }
+        }
+
+        /* =========================================================
+           TÍNH NĂNG TẢI ẢNH PNG & COPY LỜI THÁCH ĐẤU
+        ========================================================= */
+        function downloadCertificatePNG() {
+            const canvas = document.getElementById('certificate-canvas');
+            const dataUrl = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            const cleanCamName = state.camName.replace(/\s+/g, '_');
+            link.download = `Sac_Phong_Mo_Cua_${cleanCamName}.png`;
+            link.href = dataUrl;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            showToast("Đã tải ảnh Sắc Phong PNG về máy! Đăng lên khoe ngay thôi! 📸");
+        }
+
+        function copyChallengeText() {
+            const challengeMsg = `Ê ${state.camName}, vào xem ai mới là trùm mò cua bắt ốc thời đại mới nè! Đố mày cướp được giỏ của tao!`;
+            
+            const tempInput = document.createElement('textarea');
+            tempInput.value = challengeMsg;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            tempInput.setSelectionRange(0, 99999);
+            try {
+                document.execCommand('copy');
+                showToast("Đã copy lời thách đấu! Dán gửi vào Messenger cho nó ngay! 💬");
+            } catch (err) {
+                showToast("Hãy copy câu này: " + challengeMsg);
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        function resetToStart() {
+            clearAllTimers();
+            document.getElementById('screen-end').classList.add('hidden');
+            document.getElementById('screen-game').classList.add('hidden');
+            document.getElementById('screen-start').classList.remove('hidden');
+        }
+
+        function showToast(message) {
+            const box = document.getElementById('toast-box');
+            const msg = document.getElementById('toast-msg');
+            msg.textContent = message;
+            box.classList.remove('opacity-0', '-translate-y-4');
+            box.classList.add('opacity-100', 'translate-y-0');
+
+            setTimeout(() => {
+                box.classList.remove('opacity-100', 'translate-y-0');
+                box.classList.add('opacity-0', '-translate-y-4');
+            }, 2800);
+        }
+
+        // Khởi chạy ban đầu khi tải trang
+        window.onload = function() {
+            drawDefaultCamAvatar();
+            buildSwampGrid();
+        };
+    </script>
+</body>
+</html>
