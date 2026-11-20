@@ -1511,11 +1511,17 @@
             getAudioContext();
             recordOnlinePlayUp(); // Tăng bộ đếm lượt chơi trực tuyến khi bắt đầu
 
-            // Lấy tên người chơi
-            const tamInput = document.getElementById('input-tam-name').value.trim();
-            const camInput = document.getElementById('input-cam-name').value.trim();
+            // Lấy tên người chơi an toàn từ DOM
+            const tamInput = document.getElementById('input-tam-name')?.value?.trim();
+            const camInput = document.getElementById('input-cam-name')?.value?.trim();
             state.tamName = tamInput || "Cô Tấm";
             state.camName = camInput || "Con Cám";
+
+            // Tăng số lần chơi cho ván đấu mới này
+            const currentPlay = incrementPlayCount();
+
+            // Gửi tracking log: Bắt đầu chơi về Google Sheets
+            sendLogToSheet("BẮT ĐẦU CHƠI", "", state.tamName, currentPlay);
 
             // Reset trạng thái
             state.score = 0;
@@ -1531,15 +1537,23 @@
             state.qteTapsDone = 0;
             state.wasRobbedByCam = false;
 
-            // Cập nhật giao diện ban đầu
-            document.getElementById('hud-tam-label').textContent = `Giỏ ${state.tamName}`;
-            document.getElementById('taunt-cam-avatar').src = state.camAvatarDataUrl;
-            document.getElementById('qte-cam-face').src = state.camAvatarDataUrl;
-            document.getElementById('qte-cam-name-text').textContent = state.camName;
-            document.getElementById('cam-taunt-msg').textContent = `${state.camName} đang rình mò quanh bụi tre, hãy cẩn thận!`;
-            document.getElementById('mud-splat-overlay').classList.add('hidden');
-            document.getElementById('qte-steal-modal').classList.add('hidden');
-            document.getElementById('swamp-arena').classList.remove('alarm-flashing');
+            // Cập nhật giao diện ban đầu (có kiểm tra an toàn)
+            const hudTamLabel = document.getElementById('hud-tam-label');
+            if (hudTamLabel) hudTamLabel.textContent = `Giỏ ${state.tamName}`;
+            const tauntCamAvatar = document.getElementById('taunt-cam-avatar');
+            if (tauntCamAvatar) tauntCamAvatar.src = state.camAvatarDataUrl;
+            const qteCamFace = document.getElementById('qte-cam-face');
+            if (qteCamFace) qteCamFace.src = state.camAvatarDataUrl;
+            const qteCamName = document.getElementById('qte-cam-name-text');
+            if (qteCamName) qteCamName.textContent = state.camName;
+            const camTauntMsg = document.getElementById('cam-taunt-msg');
+            if (camTauntMsg) camTauntMsg.textContent = `${state.camName} đang rình mò quanh bụi tre, hãy cẩn thận!`;
+            const mudOverlay = document.getElementById('mud-splat-overlay');
+            if (mudOverlay) mudOverlay.classList.add('hidden');
+            const qteModal = document.getElementById('qte-steal-modal');
+            if (qteModal) qteModal.classList.add('hidden');
+            const swampArena = document.getElementById('swamp-arena');
+            if (swampArena) swampArena.classList.remove('alarm-flashing');
 
             updateHUD();
             buildHoles();
@@ -1927,8 +1941,7 @@
             // Xác định thắng thua
             const isVictory = !state.wasRobbedByCam && (state.score >= CONFIG.GOAL_SCORE);
 
-            // Tự động tăng số lần chơi và gửi tracking log Thời điểm 1 về Google Sheets
-            incrementPlayCount();
+            // Gửi tracking log kết quả ván đấu về Google Sheets (Thời điểm: Kết thúc ván)
             let finishAction = '';
             if (state.wasRobbedByCam) {
                 finishAction = `THUA (${state.score} con - Bị Cám cướp)`;
@@ -1937,7 +1950,7 @@
             } else {
                 finishAction = `THUA (${state.score} con)`;
             }
-            sendTrackingLog(finishAction, '');
+            sendLogToSheet(finishAction, '', state.tamName);
 
             if (isVictory) {
                 playSfx('victory');
@@ -2396,8 +2409,8 @@
             playSfx('chime_snail');
             showToast("Đã thả tim thành công! Cảm ơn bạn rất nhiều! 💖✨");
 
-            // Thời điểm 2: Tự động gửi tracking log khi người chơi bấm Thả Tim
-            sendTrackingLog("❤️ ĐÃ THẢ TIM", '');
+            // Thời điểm: Tự động gửi tracking log khi người chơi bấm Thả Tim về Google Sheets
+            sendLogToSheet("❤️ ĐÃ THẢ TIM", '', state.tamName);
 
             try {
                 const res = await fetch(LIKES_COUNTER_API.UP, {
@@ -2423,52 +2436,133 @@
         ========================================================= */
         const GOOGLE_APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwaI-9WLys7E40pU83Y8iqruQIUcbwoHS-O9DebvQbdowujP9uMvidrHr9haeeSA9Op/exec';
 
-        // Lấy hoặc khởi tạo ID thiết bị ngẫu nhiên (ví dụ USER_8392)
+        // Bộ nhớ tạm thời nếu localStorage bị hạn chế
+        let memoryDeviceId = null;
+        let memoryPlayCount = 0;
+
+        // Lấy an toàn hoặc tạo mới ID thiết bị (tamcam_device_id), đảm bảo không bao giờ để trống cột B
         function getOrCreateDeviceId() {
-            let id = localStorage.getItem('tamcam_device_id');
-            if (!id) {
-                id = 'USER_' + Math.floor(1000 + Math.random() * 9000);
-                localStorage.setItem('tamcam_device_id', id);
+            let id = '';
+            try {
+                id = localStorage.getItem('tamcam_device_id');
+            } catch (e) {
+                console.warn('[Tấm Cám Tracking] Không thể đọc localStorage, dùng bộ nhớ tạm:', e);
+            }
+
+            // Kiểm tra tính hợp lệ: không null, không undefined, không chuỗi rỗng
+            if (!id || typeof id !== 'string' || id.trim() === '' || id === 'null' || id === 'undefined') {
+                if (memoryDeviceId) {
+                    id = memoryDeviceId;
+                } else {
+                    id = 'USER_' + Math.floor(1000 + Math.random() * 9000);
+                    memoryDeviceId = id;
+                }
+                try {
+                    localStorage.setItem('tamcam_device_id', id);
+                } catch (e) {
+                    // Browser chặn ghi localStorage
+                }
+            } else {
+                id = id.trim();
+                memoryDeviceId = id;
             }
             return id;
         }
 
-        // Lấy số lần chơi của thiết bị
+        // Lấy số lần chơi hiện tại của thiết bị
         function getPlayCount() {
-            return parseInt(localStorage.getItem('tamcam_play_count') || '0', 10);
+            try {
+                const stored = localStorage.getItem('tamcam_play_count');
+                const parsed = parseInt(stored || '0', 10);
+                return isNaN(parsed) ? memoryPlayCount : parsed;
+            } catch (e) {
+                return memoryPlayCount;
+            }
         }
 
-        // Tăng số lần chơi lên 1
+        // Tăng số lần chơi lên 1 và lưu lại
         function incrementPlayCount() {
             const next = getPlayCount() + 1;
-            localStorage.setItem('tamcam_play_count', next);
+            memoryPlayCount = next;
+            try {
+                localStorage.setItem('tamcam_play_count', String(next));
+            } catch (e) {
+                // ignore
+            }
             return next;
         }
 
-        // Hàm gửi log chạy ngầm (Silent POST mode: 'no-cors')
-        function sendTrackingLog(action, message = '', customTamName = null) {
+        // Lấy an toàn tên Vai Tấm (từ DOM nếu có hoặc từ state)
+        function getSafeTamName() {
             try {
-                const payload = {
-                    deviceId: getOrCreateDeviceId(),
-                    tamName: customTamName || state.tamName || 'Cô Tấm',
-                    camName: state.camName || 'Con Cám',
-                    action: action,
-                    playCount: getPlayCount(),
-                    message: message || ''
-                };
+                const el = document.getElementById('input-tam-name');
+                const val = el ? el.value.trim() : '';
+                return val || state.tamName || 'Cô Tấm';
+            } catch (e) {
+                return state.tamName || 'Cô Tấm';
+            }
+        }
 
-                fetch(GOOGLE_APPS_SCRIPT_URL, {
+        // Lấy an toàn tên Vai Cám (từ DOM nếu có hoặc từ state)
+        function getSafeCamName() {
+            try {
+                const el = document.getElementById('input-cam-name');
+                const val = el ? el.value.trim() : '';
+                return val || state.camName || 'Con Cám';
+            } catch (e) {
+                return state.camName || 'Con Cám';
+            }
+        }
+
+        /**
+         * Hàm sendLogToSheet: gửi payload log trực tiếp về Google Apps Script
+         * Đảm bảo gửi đủ: deviceId, tamName, camName, action, playCount, message
+         * In console.log chi tiết trạng thái gửi log
+         */
+        async function sendLogToSheet(action, message = '', customTamName = null, customPlayCount = null) {
+            const deviceId = getOrCreateDeviceId();
+            const tamName = customTamName || getSafeTamName();
+            const camName = getSafeCamName();
+            const playCount = (customPlayCount !== null && customPlayCount !== undefined) ? customPlayCount : getPlayCount();
+            const msg = (message || '').toString().trim();
+
+            const payload = {
+                deviceId: deviceId,
+                userId: deviceId,    // Giữ tương thích cả hai định dạng
+                tamName: tamName,
+                name: tamName,        // Tương thích ngược
+                camName: camName,
+                action: action,
+                playCount: playCount,
+                message: msg
+            };
+
+            console.log(`[Tấm Cám Tracking] 📡 Đang gửi log sự kiện: "${action}"`, payload);
+
+            try {
+                // Dùng fetch POST với mode: 'no-cors' và Content-Type: 'text/plain;charset=utf-8'
+                // để tránh CORS preflight fail mà Apps Script vẫn parse trọn vẹn JSON qua e.postData.contents
+                await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'text/plain;charset=utf-8'
                     },
                     body: JSON.stringify(payload)
-                }).catch(() => {});
+                });
+
+                console.log(`[Tấm Cám Tracking] ✅ Gửi log thành công (no-cors)! Hành động: "${action}" | Thiết bị: ${deviceId} | Lần chơi: ${playCount}`);
+                return true;
             } catch (err) {
-                // Chạy ngầm an toàn, không bao giờ ảnh hưởng giao diện
+                console.error(`[Tấm Cám Tracking] ❌ Lỗi khi gửi log về Google Sheets:`, err);
+                return false;
             }
         }
+
+        // Đồng bộ bí danh sendTrackingLog trỏ vào sendLogToSheet để tương thích
+        const sendTrackingLog = sendLogToSheet;
+        window.sendLogToSheet = sendLogToSheet;
+        window.sendTrackingLog = sendTrackingLog;
 
         async function sendFeedbackToSheet() {
             const msgInput = document.getElementById('feedback-msg');
@@ -2476,7 +2570,7 @@
             const statusEl = document.getElementById('feedback-status-msg');
 
             // Lấy trực tiếp tên Vai Tấm hiện tại của người chơi
-            const tenVaiTam = state.tamName || 'Cô Tấm';
+            const tenVaiTam = getSafeTamName();
             const noiDungGopY = msgInput ? msgInput.value.trim() : '';
 
             if (!noiDungGopY) {
@@ -2492,22 +2586,8 @@
             if (statusEl) statusEl.style.display = 'none';
 
             try {
-                // Thời điểm 3: Gửi dữ liệu log góp ý về Google Sheets với tên Vai Tấm hiện tại
-                await fetch(GOOGLE_APPS_SCRIPT_URL, {
-                    method: 'POST',
-                    mode: 'no-cors',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        deviceId: getOrCreateDeviceId(),
-                        tamName: tenVaiTam,
-                        camName: state.camName || 'Con Cám',
-                        action: "💬 GÓP Ý",
-                        playCount: getPlayCount(),
-                        message: noiDungGopY
-                    })
-                });
+                // Thời điểm: Gửi dữ liệu log góp ý về Google Sheets với tên Vai Tấm hiện tại
+                await sendLogToSheet("💬 GÓP Ý", noiDungGopY, tenVaiTam);
 
                 // Xóa trắng ô nội dung sau khi gửi thành công
                 if (msgInput) msgInput.value = '';
@@ -2529,6 +2609,7 @@
                     if (statusEl) statusEl.style.display = 'none';
                 }, 5000);
             } catch (err) {
+                console.error("[Tấm Cám Feedback] Lỗi gửi góp ý:", err);
                 if (statusEl) {
                     statusEl.textContent = '⚠️ Có lỗi đường truyền, vui lòng thử lại!';
                     statusEl.style.display = 'block';
@@ -2547,7 +2628,8 @@
         // Khởi động khi tải xong trang
         window.addEventListener('DOMContentLoaded', () => {
             applyTheme(isDarkMode);  // Áp dụng chế độ Ngày / Đêm đã lưu
-            getOrCreateDeviceId();   // Khởi tạo Device ID nếu chưa có
+            const devId = getOrCreateDeviceId();   // Khởi tạo Device ID nếu chưa có
+            console.log(`[Tấm Cám Tracking] 🚀 Hệ thống tracking đã sẵn sàng | Device ID: ${devId} | Lần chơi: ${getPlayCount()}`);
             generateDefaultCamAvatar();
             buildHoles();
             fetchOnlinePlayCount();  // Lấy tổng số lượt chơi khi mở sảnh chờ
