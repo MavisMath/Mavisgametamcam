@@ -2528,9 +2528,7 @@
 
             const payload = {
                 deviceId: deviceId,
-                userId: deviceId,    // Giữ tương thích cả hai định dạng
                 tamName: tamName,
-                name: tamName,        // Tương thích ngược
                 camName: camName,
                 action: action,
                 playCount: playCount,
@@ -2540,11 +2538,11 @@
             console.log(`[Tấm Cám Tracking] 📡 Đang gửi log sự kiện: "${action}"`, payload);
 
             try {
-                // Dùng fetch POST với mode: 'no-cors' và Content-Type: 'text/plain;charset=utf-8'
-                // để tránh CORS preflight fail mà Apps Script vẫn parse trọn vẹn JSON qua e.postData.contents
+                // Gửi gói tin bền bỉ với keepalive: true và mode: 'no-cors'
                 await fetch(GOOGLE_APPS_SCRIPT_URL, {
                     method: 'POST',
                     mode: 'no-cors',
+                    keepalive: true,
                     headers: {
                         'Content-Type': 'text/plain;charset=utf-8'
                     },
